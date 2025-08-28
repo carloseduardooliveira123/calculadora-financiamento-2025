@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Inteligente de Financiamento Imobiliário 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .calculator-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 1000px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .update-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .calculator-content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group.hidden {
+            display: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .input-prefix {
+            position: relative;
+        }
+
+        .input-prefix::before {
+            content: 'R$';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        .input-prefix input {
+            padding-left: 45px;
+        }
+
+        .tipo-imovel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .tipo-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .tipo-option:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .tipo-option.selected {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .tipo-option .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .tipo-option .name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .banco-selection {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .banco-mode {
+            flex: 1;
+            min-width: 200px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .banco-mode:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .banco-mode.selected {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .banco-mode .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .banco-mode .title {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .banco-mode .description {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .banco-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .banco-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .banco-option:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .banco-option.selected {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .banco-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .banco-name {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .banco-details {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-available {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-limited {
+            background: #FF9800;
+            color: white;
+        }
+
+        .status-blocked {
+            background: #f44336;
+            color: white;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+        }
+
+        .calculate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .result-header {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .result-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .comparison-section {
+            margin-top: 30px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .comparison-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-item.best {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .comparison-item.best .comparison-header::after {
+            content: ' 🏆';
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .banco-info {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .taxa-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .comparison-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <div class="header">
+            <h1>🏠 Simulador Inteligente</h1>
+            <p>Financiamento Imobiliário 2025</p>
+            <div class="update-badge">✨ Atualizado Agosto/2025</div>
+        </div>
+
+        <div class="calculator-content">
+            <form id="calculatorForm">
+                <!-- Tipo de Imóvel -->
+                <div class="form-group">
+                    <label>🏡 Tipo do Imóvel <span class="required">*</span></label>
+                    <div class="tipo-imovel-grid">
+                        <div class="tipo-option" data-tipo="novo">
+                            <div class="icon">🏗️</div>
+                            <div class="name">Imóvel Novo</div>
+                        </div>
+                        <div class="tipo-option" data-tipo="usado">
+                            <div class="icon">🏠</div>
+                            <div class="name">Imóvel Usado</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Valor do Imóvel e Renda -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="valorImovel">💰 Valor do Imóvel <span class="required">*</span></label>
+                        <div class="input-prefix">
+                            <input type="text" id="valorImovel" placeholder="500.000,00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rendaFamiliar">👨‍👩‍👧‍👦 Renda Familiar <span class="required">*</span></label>
+                        <div class="input-prefix">
+                            <input type="text" id="rendaFamiliar" placeholder="8.000,00" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Entrada e FGTS -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="entrada">💳 Valor da Entrada</label>
+                        <div class="input-prefix">
+                            <input type="text" id="entrada" placeholder="100.000,00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fgts">🏦 Valor FGTS</label>
+                        <div class="input-prefix">
+                            <input type="text" id="fgts" placeholder="50.000,00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modo de Seleção de Banco -->
+                <div class="form-group">
+                    <label>🎯 Modo de Simulação <span class="required">*</span></label>
+                    <div class="banco-selection">
+                        <div class="banco-mode" data-mode="all">
+                            <div class="icon">🔄</div>
+                            <div class="title">Todos os Bancos</div>
+                            <div class="description">Compare automaticamente todas as opções</div>
+                        </div>
+                        <div class="banco-mode" data-mode="single">
+                            <div class="icon">🎯</div>
+                            <div class="title">Banco Específico</div>
+                            <div class="description">Escolha um banco para simular</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seleção de Banco Individual -->
+                <div class="form-group hidden" id="bancoEspecificoGroup">
+                    <label>🏛️ Escolha o Banco</label>
+                    <div class="banco-grid" id="bancoGrid">
+                        <!-- Bancos serão inseridos via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Campos Específicos por Banco -->
+                <div class="form-group hidden" id="sistemaGroup">
+                    <label for="sistema">📊 Sistema de Amortização (Caixa)</label>
+                    <select id="sistema">
+                        <option value="sac">SAC - Prestações Decrescentes (70% LTV)</option>
+                        <option value="price">PRICE - Prestações Fixas (50% LTV)</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="itauGroup">
+                    <label for="itauSegmento">🏛️ Segmento Itaú</label>
+                    <select id="itauSegmento">
+                        <option value="agencias">Agências (Renda mín: R$ 7.000)</option>
+                        <option value="personnalite">Personnalité</option>
+                        <option value="uniclass">Uniclass</option>
+                        <option value="repasse">Produto Repasse (90% LTV)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="calculate-btn" id="calculateBtn" disabled>
+                    🧮 Simular Financiamento
+                </button>
+            </form>
+
+            <div class="results-container" id="resultsContainer">
+                <!-- Resultados aparecerão aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Calculadora iniciada!');
+
+        // Dados dos bancos
+        const bancos = {
+            caixa: {
+                nome: 'Caixa Econômica',
+                taxa: 11.29,
+                valorMax: 1500000,
+                sistemas: {
+                    sac: { ltv: 70, entrada: 30 },
+                    price: { ltv: 50, entrada: 50 }
+                }
+            },
+            bb: {
+                nome: 'Banco do Brasil',
+                taxa: 12.00,
+                ltv: 80,
+                valorMax: 5000000,
+                valorMin: 20000
+            },
+            itau: {
+                nome: 'Itaú',
+                taxa: 12.19,
+                valorMax: 2000000,
+                segmentos: {
+                    agencias: { ltv: 80, rendaMin: 7000 },
+                    personnalite: { ltv: 80, rendaMin: 0 },
+                    uniclass: { ltv: 80, rendaMin: 0 },
+                    repasse: { ltv: 90, rendaMin: 0 }
+                }
+            },
+            santander: {
+                nome: 'Santander',
+                taxa: 12.50,
+                ltv: 80,
+                valorMax: 2000000
+            },
+            bradesco: {
+                nome: 'Bradesco',
+                taxa: 13.50,
+                ltv: 70,
+                valorMax: 2000000
+            },
+            inter: {
+                nome: 'Banco Inter',
+                taxa: 9.40,
+                ltv: 75,
+                valorMax: 2000000,
+                rendaBruta: true
+            },
+            sicredi: {
+                nome: 'Sicredi',
+                taxa: 7.50,
+                ltv: 90,
+                valorMax: 1500000
+            },
+            sicoob: {
+                nome: 'Sicoob',
+                taxa: 7.50,
+                ltv: 80,
+                valorMax: 1500000
+            }
+        };
+
+        let tipoImovel = null;
+        let modoSimulacao = null;
+        let bancoSelecionado = null;
+
+        // Formatação de moeda
+        function formatMoney(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+
+        function parseMoney(valor) {
+            if (!valor) return 0;
+            return parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        }
+
+        function formatNumber(value) {
+            const num = value.replace(/\D/g, '');
+            return new Intl.NumberFormat('pt-BR').format(parseInt(num) / 100 || 0);
+        }
+
+        function setupMoneyInputs() {
+            ['valorImovel', 'rendaFamiliar', 'entrada', 'fgts'].forEach(id => {
+                const input = document.getElementById(id);
+                
+                input.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        const formatted = formatNumber(value + '00');
+                        e.target.value = formatted;
+                    }
+                    validarFormulario();
+                });
+
+                input.addEventListener('blur', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        const num = parseInt(value) / 100;
+                        e.target.value = num.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                });
+            });
+        }
+
+        // Renderizar bancos
+        function renderBancos() {
+            const grid = document.getElementById('bancoGrid');
+            grid.innerHTML = '';
+            
+            const valorImovel = parseMoney(document.getElementById('valorImovel').value);
+            
+            Object.keys(bancos).forEach(key => {
+                const banco = bancos[key];
+                const div = document.createElement('div');
+                div.className = 'banco-option';
+                div.dataset.banco = key;
+                
+                // Verificar disponibilidade
+                let status = 'available';
+                let statusIcon = '✓';
+                
+                if (banco.valorMax && valorImovel > banco.valorMax) {
+                    status = 'blocked';
+                    statusIcon = '✗';
+                    div.classList.add('disabled');
+                } else if (banco.valorMin && valorImovel > 0 && valorImovel < banco.valorMin) {
+                    status = 'blocked';
+                    statusIcon = '✗';
+                    div.classList.add('disabled');
+                }
+                
+                div.innerHTML = `
+                    <div class="status-indicator status-${status}">${statusIcon}</div>
+                    <div class="banco-name">${banco.nome}</div>
+                    <div class="banco-details">
+                        Taxa: ${banco.taxa}% a.a.<br>
+                        LTV: ${banco.ltv || 'Variável'}%
+                    </div>
+                `;
+                
+                if (!div.classList.contains('disabled')) {
+                    div.addEventListener('click', () => selecionarBanco(key));
+                }
+                
+                grid.appendChild(div);
+            });
+        }
+
+        // Selecionar tipo de imóvel
+        function setupTipoImovel() {
+            document.querySelectorAll('.tipo-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    tipoImovel = option.dataset.tipo;
+                    
+                    document.querySelectorAll('.tipo-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    option.classList.add('selected');
+                    
+                    validarFormulario();
+                });
+            });
+        }
+
+        // Selecionar modo de simulação
+        function setupModoSimulacao() {
+            document.querySelectorAll('.banco-mode').forEach(mode => {
+                mode.addEventListener('click', () => {
+                    modoSimulacao = mode.dataset.mode;
+                    
+                    document.querySelectorAll('.banco-mode').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    mode.classList.add('selected');
+                    
+                    // Mostrar/esconder seleção de banco específico
+                    const bancoGroup = document.getElementById('bancoEspecificoGroup');
+                    if (modoSimulacao === 'single') {
+                        bancoGroup.classList.remove('hidden');
+                        renderBancos();
+                    } else {
+                        bancoGroup.classList.add('hidden');
+                        bancoSelecionado = null;
+                        document.getElementById('sistemaGroup').classList.add('hidden');
+                        document.getElementById('itauGroup').classList.add('hidden');
+                    }
+                    
+                    validarFormulario();
+                });
+            });
+        }
+
+        // Selecionar banco
+        function selecionarBanco(key) {
+            console.log(`🏛️ Banco selecionado: ${key}`);
+            bancoSelecionado = key;
+            
+            document.querySelectorAll('.banco-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelector(`[data-banco="${key}"]`).classList.add('selected');
+            
+            // Mostrar campos específicos
+            document.getElementById('sistemaGroup').classList.add('hidden');
+            document.getElementById('itauGroup').classList.add('hidden');
+            
+            if (key === 'caixa') {
+                document.getElementById('sistemaGroup').classList.remove('hidden');
+            }
+            
+            if (key === 'itau') {
+                document.getElementById('itauGroup').classList.remove('hidden');
+            }
+            
+            validarFormulario();
+        }
+
+        // Validar formulário
+        function validarFormulario() {
+            const valorImovel = parseMoney(document.getElementById('valorImovel').value);
+            const renda = parseMoney(document.getElementById('rendaFamiliar').value);
+            
+            let isValid = tipoImovel && 
+                         valorImovel > 0 && 
+                         renda > 0 && 
+                         modoSimulacao &&
+                         (modoSimulacao === 'all' || bancoSelecionado);
+            
+            document.getElementById('calculateBtn').disabled = !isValid;
+            
+            // Atualizar grid de bancos se necessário
+            if (modoSimulacao === 'single' && valorImovel > 0) {
+                renderBancos();
+            }
+            
+            return isValid;
+        }
+
+        // Calcular financiamento
+        function calcularFinanciamento() {
+            console.log('🧮 Iniciando cálculo...');
+            
+            const dados = {
+                tipoImovel,
+                valorImovel: parseMoney(document.getElementById('valorImovel').value),
+                renda: parseMoney(document.getElementById('rendaFamiliar').value),
+                entrada: parseMoney(document.getElementById('entrada').value),
+                fgts: parseMoney(document.getElementById('fgts').value),
+                modo: modoSimulacao,
+                banco: bancoSelecionado,
+                sistema: document.getElementById('sistema').value || 'sac',
+                itauSegmento: document.getElementById('itauSegmento').value || 'agencias'
+            };
+            
+            console.log('📊 Dados:', dados);
+            
+            // Mostrar loading
+            mostrarLoading();
+            
+            // Simular delay para melhor UX
+            setTimeout(() => {
+                try {
+                    let resultados = [];
+                    
+                    if (dados.modo === 'all') {
+                        // Calcular todos os bancos
+                        Object.keys(bancos).forEach(bancoKey => {
+                            const resultado = calcularBanco(bancoKey, dados);
+                            if (resultado.aprovado) {
+                                resultados.push(resultado);
+                            }
+                        });
+                        
+                        // Ordenar por parcela
+                        resultados.sort((a, b) => a.parcela - b.parcela);
+                        exibirComparacao(resultados, dados);
+                        
+                    } else {
+                        // Calcular banco específico
+                        const resultado = calcularBanco(dados.banco, dados);
+                        exibirResultadoUnico(resultado, dados);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Erro:', error);
+                    mostrarErro(error.message);
+                }
+            }, 1000);
+        }
+
+        // Mostrar loading
+        function mostrarLoading() {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Calculando as melhores opções para você...</p>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+
+        // Calcular para um banco específico
+        function calcularBanco(bancoKey, dados) {
+            const banco = bancos[bancoKey];
+            
+            // Determinar LTV
+            let ltv = 80;
+            if (bancoKey === 'caixa') {
+                ltv = banco.sistemas[dados.sistema].ltv;
+            } else if (bancoKey === 'itau') {
+                ltv = banco.segmentos[dados.itauSegmento].ltv;
+                const rendaMin = banco.segmentos[dados.itauSegmento].rendaMin;
+                if (rendaMin > 0 && dados.renda < rendaMin) {
+                    return { aprovado: false, motivo: `Renda mínima: ${formatMoney(rendaMin)}` };
+                }
+            } else {
+                ltv = banco.ltv;
+            }
+            
+            // Verificar limites
+            if (banco.valorMax && dados.valorImovel > banco.valor
