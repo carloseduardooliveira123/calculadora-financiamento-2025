@@ -554,6 +554,7 @@
                             <div class="description">Escolha um banco para simular</div>
                         </div>
                     </div>
+                    <div id="modoAlert"></div>
                 </div>
 
                 <!-- Seleção de Banco Individual -->
@@ -562,6 +563,7 @@
                     <div class="banco-grid" id="bancoGrid">
                         <!-- Bancos serão inseridos via JavaScript -->
                     </div>
+                    <div id="bancoAlert"></div>
                 </div>
 
                 <!-- Campos Específicos por Banco -->
@@ -691,7 +693,8 @@
                         const formatted = formatNumber(value + '00');
                         e.target.value = formatted;
                     }
-                    validarFormulario();
+                    // Chamar validação após cada input
+                    setTimeout(validarFormulario, 100);
                 });
 
                 input.addEventListener('blur', (e) => {
@@ -703,6 +706,8 @@
                             maximumFractionDigits: 2
                         });
                     }
+                    // Chamar validação após blur
+                    setTimeout(validarFormulario, 100);
                 });
             });
         }
@@ -719,6 +724,11 @@
                 const div = document.createElement('div');
                 div.className = 'banco-option';
                 div.dataset.banco = key;
+                
+                // IMPORTANTE: Resetar seleção ao renderizar
+                if (bancoSelecionado !== key) {
+                    // Não marcar como selecionado
+                }
                 
                 // Verificar disponibilidade
                 let status = 'available';
@@ -749,6 +759,14 @@
                 
                 grid.appendChild(div);
             });
+            
+            // Aplicar seleção atual se houver
+            if (bancoSelecionado) {
+                const bancoElement = document.querySelector(`[data-banco="${bancoSelecionado}"]`);
+                if (bancoElement && !bancoElement.classList.contains('disabled')) {
+                    bancoElement.classList.add('selected');
+                }
+            }
         }
 
         // Selecionar tipo de imóvel
@@ -757,12 +775,15 @@
                 option.addEventListener('click', () => {
                     tipoImovel = option.dataset.tipo;
                     
+                    console.log('🏡 Tipo selecionado:', tipoImovel);
+                    
                     document.querySelectorAll('.tipo-option').forEach(el => {
                         el.classList.remove('selected');
                     });
                     option.classList.add('selected');
                     
-                    validarFormulario();
+                    // Chamar validação
+                    setTimeout(validarFormulario, 100);
                 });
             });
         }
@@ -773,24 +794,46 @@
                 mode.addEventListener('click', () => {
                     modoSimulacao = mode.dataset.mode;
                     
+                    console.log('🎯 Modo selecionado:', modoSimulacao);
+                    
+                    // Limpar seleções visuais
                     document.querySelectorAll('.banco-mode').forEach(el => {
                         el.classList.remove('selected');
                     });
                     mode.classList.add('selected');
                     
+                    // Resetar seleção de banco ao mudar modo
+                    bancoSelecionado = null;
+                    
                     // Mostrar/esconder seleção de banco específico
                     const bancoGroup = document.getElementById('bancoEspecificoGroup');
+                    const modoAlert = document.getElementById('modoAlert');
+                    
                     if (modoSimulacao === 'single') {
                         bancoGroup.classList.remove('hidden');
-                        renderBancos();
+                        renderBancos(); // Renderizar sem seleções
+                        modoAlert.innerHTML = `
+                            <div class="alert alert-info">
+                                <span>🎯</span>
+                                <div><strong>Modo Banco Específico:</strong> Selecione um banco acima para simular</div>
+                            </div>
+                        `;
                     } else {
                         bancoGroup.classList.add('hidden');
-                        bancoSelecionado = null;
-                        document.getElementById('sistemaGroup').classList.add('hidden');
-                        document.getElementById('itauGroup').classList.add('hidden');
+                        modoAlert.innerHTML = `
+                            <div class="alert alert-success">
+                                <span>🔄</span>
+                                <div><strong>Todos os Bancos Selecionados!</strong> Clique em "Simular" para comparar todas as opções disponíveis</div>
+                            </div>
+                        `;
                     }
                     
-                    validarFormulario();
+                    // Esconder campos específicos
+                    document.getElementById('sistemaGroup').classList.add('hidden');
+                    document.getElementById('itauGroup').classList.add('hidden');
+                    
+                    // Chamar validação
+                    setTimeout(validarFormulario, 100);
                 });
             });
         }
@@ -817,7 +860,8 @@
                 document.getElementById('itauGroup').classList.remove('hidden');
             }
             
-            validarFormulario();
+            // Chamar validação
+            setTimeout(validarFormulario, 100);
         }
 
         // Validar formulário
@@ -825,13 +869,44 @@
             const valorImovel = parseMoney(document.getElementById('valorImovel').value);
             const renda = parseMoney(document.getElementById('rendaFamiliar').value);
             
+            console.log('🔍 Validando:', { 
+                tipoImovel, 
+                valorImovel, 
+                renda, 
+                modoSimulacao, 
+                bancoSelecionado 
+            });
+            
             let isValid = tipoImovel && 
                          valorImovel > 0 && 
                          renda > 0 && 
                          modoSimulacao &&
                          (modoSimulacao === 'all' || bancoSelecionado);
             
-            document.getElementById('calculateBtn').disabled = !isValid;
+            console.log('✅ Formulário válido:', isValid);
+            
+            const btn = document.getElementById('calculateBtn');
+            btn.disabled = !isValid;
+            
+            // Mudança visual do botão para debug
+            if (isValid) {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.innerHTML = '🧮 Simular Financiamento';
+            } else {
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+                
+                // Mostrar o que está faltando
+                let faltando = [];
+                if (!tipoImovel) faltando.push('Tipo do imóvel');
+                if (!valorImovel) faltando.push('Valor do imóvel');
+                if (!renda) faltando.push('Renda familiar');
+                if (!modoSimulacao) faltando.push('Modo de simulação');
+                if (modoSimulacao === 'single' && !bancoSelecionado) faltando.push('Banco específico');
+                
+                btn.innerHTML = `⚠️ Preencha: ${faltando.join(', ')}`;
+            }
             
             // Atualizar grid de bancos se necessário
             if (modoSimulacao === 'single' && valorImovel > 0) {
@@ -857,7 +932,7 @@
                 itauSegmento: document.getElementById('itauSegmento').value || 'agencias'
             };
             
-            console.log('📊 Dados:', dados);
+            console.log('📊 Dados coletados:', dados);
             
             // Mostrar loading
             mostrarLoading();
@@ -869,28 +944,34 @@
                     
                     if (dados.modo === 'all') {
                         // Calcular todos os bancos
-                        Object.keys(bancos).forEach(bancoKey => {
-                            const resultado = calcularBanco(bancoKey, dados);
-                            if (resultado.aprovado) {
-                                resultados.push(resultado);
-                            }
-                        });
+                        console.log('🔄 Modo: Todos os bancos');
+                        resultados = calcularTodosBancos(dados);
                         
-                        // Ordenar por parcela
-                        resultados.sort((a, b) => a.parcela - b.parcela);
-                        exibirComparacao(resultados, dados);
+                        if (resultados.length > 0) {
+                            // Ordenar por parcela
+                            resultados.sort((a, b) => a.parcela - b.parcela);
+                            console.log('📈 Resultados ordenados por parcela');
+                            exibirComparacao(resultados, dados);
+                        } else {
+                            console.log('❌ Nenhum banco aprovou');
+                            exibirComparacao([], dados);
+                        }
                         
-                    } else {
+                    } else if (dados.modo === 'single' && dados.banco) {
                         // Calcular banco específico
+                        console.log('🎯 Modo: Banco específico -', dados.banco);
                         const resultado = calcularBanco(dados.banco, dados);
+                        console.log('📊 Resultado banco específico:', resultado);
                         exibirResultadoUnico(resultado, dados);
+                    } else {
+                        throw new Error('Configuração inválida para cálculo');
                     }
                     
                 } catch (error) {
-                    console.error('❌ Erro:', error);
+                    console.error('❌ Erro no cálculo:', error);
                     mostrarErro(error.message);
                 }
-            }, 1000);
+            }, 800);
         }
 
         // Mostrar loading
@@ -924,4 +1005,373 @@
             }
             
             // Verificar limites
-            if (banco.valorMax && dados.valorImovel > banco.valor
+            if (banco.valorMax && dados.valorImovel > banco.valorMax) {
+                return { aprovado: false, motivo: `Limite máximo: ${formatMoney(banco.valorMax)}` };
+            }
+            
+            if (banco.valorMin && dados.valorImovel < banco.valorMin) {
+                return { aprovado: false, motivo: `Valor mínimo: ${formatMoney(banco.valorMin)}` };
+            }
+            
+            // Calcular financiamento
+            const valorMaxFinanciado = dados.valorImovel * (ltv / 100);
+            const entradaDisponivel = dados.entrada + dados.fgts;
+            const valorFinanciado = Math.min(valorMaxFinanciado, dados.valorImovel - entradaDisponivel);
+            const entradaNecessaria = dados.valorImovel - valorFinanciado;
+            
+            if (valorFinanciado <= 0) {
+                return { aprovado: false, motivo: 'Valor a financiar muito baixo' };
+            }
+            
+            if (entradaNecessaria > entradaDisponivel) {
+                return { 
+                    aprovado: false, 
+                    motivo: `Entrada insuficiente. Necessário: ${formatMoney(entradaNecessaria)}` 
+                };
+            }
+            
+            // Calcular parcela
+            const taxaMensal = banco.taxa / 100 / 12;
+            const prazo = 360; // 30 anos
+            
+            let parcela;
+            if (dados.sistema === 'price' && bancoKey === 'caixa') {
+                const fator = Math.pow(1 + taxaMensal, prazo);
+                parcela = valorFinanciado * (taxaMensal * fator) / (fator - 1);
+            } else {
+                // SAC - primeira parcela
+                const amortizacao = valorFinanciado / prazo;
+                const juros = valorFinanciado * taxaMensal;
+                parcela = amortizacao + juros;
+            }
+            
+            // Verificar capacidade de pagamento
+            const rendaConsiderada = banco.rendaBruta ? dados.renda : dados.renda * 0.85;
+            const capacidadeMax = rendaConsiderada * 0.30;
+            const comprometimento = (parcela / rendaConsiderada) * 100;
+            const aprovado = parcela <= capacidadeMax;
+            
+            return {
+                bancoKey,
+                banco: banco.nome,
+                taxa: banco.taxa,
+                ltv,
+                valorImovel: dados.valorImovel,
+                valorFinanciado,
+                entradaNecessaria,
+                parcela,
+                comprometimento: comprometimento.toFixed(1),
+                capacidadeMax,
+                sistema: dados.sistema || 'sac',
+                aprovado,
+                jurosTotal: (parcela * prazo) - valorFinanciado,
+                valorTotal: parcela * prazo
+            };
+        }
+
+        // Exibir resultado único
+        function exibirResultadoUnico(resultado, dados) {
+            const container = document.getElementById('resultsContainer');
+            
+            if (!resultado.aprovado) {
+                container.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <span>❌</span>
+                            <span>Não Aprovado - ${resultado.banco || dados.banco}</span>
+                        </div>
+                        <div class="alert alert-danger">
+                            <span>❌</span>
+                            <div><strong>Motivo:</strong> ${resultado.motivo}</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const statusIcon = resultado.aprovado ? '✅' : '❌';
+            const statusText = resultado.aprovado ? 'APROVADO' : 'REPROVADO';
+            
+            container.innerHTML = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <span>${statusIcon}</span>
+                        <span>${statusText} - ${resultado.banco}</span>
+                    </div>
+                    
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">Parcela Mensal</div>
+                            <div class="result-value">${formatMoney(resultado.parcela)}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Valor Financiado</div>
+                            <div class="result-value">${formatMoney(resultado.valorFinanciado)}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Entrada Necessária</div>
+                            <div class="result-value">${formatMoney(resultado.entradaNecessaria)}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Taxa de Juros</div>
+                            <div class="result-value">${resultado.taxa}% a.a.</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">LTV</div>
+                            <div class="result-value">${resultado.ltv}%</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Comprometimento</div>
+                            <div class="result-value">${resultado.comprometimento}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <span>💡</span>
+                        <div>
+                            <strong>Detalhes:</strong> 
+                            Sistema ${resultado.sistema.toUpperCase()} | 
+                            Prazo 30 anos | 
+                            Total de juros: ${formatMoney(resultado.jurosTotal)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Exibir comparação de todos os bancos
+        function exibirComparacao(resultados, dados) {
+            const container = document.getElementById('resultsContainer');
+            
+            if (resultados.length === 0) {
+                container.innerHTML = `
+                    <div class="result-card">
+                        <div class="no-results">
+                            <h3>😔 Nenhuma Opção Disponível</h3>
+                            <p>Infelizmente, nenhum banco aprovou o financiamento com essas condições.</p>
+                            <p><strong>Sugestões:</strong></p>
+                            <ul style="text-align: left; margin-top: 15px;">
+                                <li>Aumentar o valor da entrada</li>
+                                <li>Considerar um imóvel de menor valor</li>
+                                <li>Aumentar a comprovação de renda</li>
+                                <li>Utilizar o FGTS disponível</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <span>🏆</span>
+                        <span>Melhor Opção: ${resultados[0].banco}</span>
+                    </div>
+                    
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">Menor Parcela</div>
+                            <div class="result-value">${formatMoney(resultados[0].parcela)}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Valor Financiado</div>
+                            <div class="result-value">${formatMoney(resultados[0].valorFinanciado)}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Entrada Necessária</div>
+                            <div class="result-value">${formatMoney(resultados[0].entradaNecessaria)}</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Taxa de Juros</div>
+                            <div class="result-value">${resultados[0].taxa}% a.a.</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">LTV</div>
+                            <div class="result-value">${resultados[0].ltv}%</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Economia vs 2ª Opção</div>
+                            <div class="result-value">
+                                ${resultados[1] ? formatMoney(resultados[1].parcela - resultados[0].parcela) + '/mês' : 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="comparison-section">
+                        <div class="result-header">
+                            <span>📊</span>
+                            <span>Comparação Completa (${resultados.length} opções aprovadas)</span>
+                        </div>
+                        
+                        <div class="comparison-grid">
+            `;
+
+            resultados.forEach((resultado, index) => {
+                const isBest = index === 0;
+                html += `
+                    <div class="comparison-item ${isBest ? 'best' : ''}">
+                        <div class="comparison-header">
+                            <div>
+                                <div class="banco-info">${resultado.banco}</div>
+                                <div class="taxa-info">${resultado.taxa}% a.a. + TR</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="banco-info">${formatMoney(resultado.parcela)}</div>
+                                <div class="taxa-info">por mês</div>
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-details">
+                            <div class="detail-item">
+                                <div class="detail-label">LTV</div>
+                                <div class="detail-value">${resultado.ltv}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Entrada</div>
+                                <div class="detail-value">${formatMoney(resultado.entradaNecessaria)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Financiado</div>
+                                <div class="detail-value">${formatMoney(resultado.valorFinanciado)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Comprometimento</div>
+                                <div class="detail-value">${resultado.comprometimento}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Total Juros</div>
+                                <div class="detail-value">${formatMoney(resultado.jurosTotal)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Sistema</div>
+                                <div class="detail-value">${resultado.sistema.toUpperCase()}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-header">
+                        <span>💡</span>
+                        <span>Dicas Personalizadas</span>
+                    </div>
+                    ${gerarDicas(resultados, dados)}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Gerar dicas personalizadas
+        function gerarDicas(resultados, dados) {
+            const melhor = resultados[0];
+            let dicas = [];
+
+            // Dica sobre a melhor opção
+            if (melhor.bancoKey === 'sicredi' || melhor.bancoKey === 'sicoob') {
+                dicas.push('🤝 Cooperativas de crédito oferecem as melhores taxas! Para se associar, procure uma agência na sua região.');
+            }
+
+            // Dica sobre LTV
+            if (melhor.ltv >= 90) {
+                dicas.push('🎯 Excelente! Você conseguiu financiar 90% do imóvel, precisando de pouca entrada.');
+            } else if (melhor.ltv <= 70) {
+                dicas.push('💰 Entrada maior reduz risco e pode resultar em melhores condições no futuro.');
+            }
+
+            // Dica sobre economia
+            if (resultados.length > 1) {
+                const economia = (resultados[1].parcela - melhor.parcela) * 360;
+                dicas.push(`💸 Escolhendo ${melhor.banco}, você economiza ${formatMoney(economia)} em 30 anos comparado ao ${resultados[1].banco}.`);
+            }
+
+            // Dica sobre comprometimento
+            if (parseFloat(melhor.comprometimento) < 20) {
+                dicas.push('✅ Comprometimento baixo da renda! Você terá folga no orçamento para imprevistos.');
+            } else if (parseFloat(melhor.comprometimento) > 25) {
+                dicas.push('⚠️ Comprometimento alto da renda. Considere aumentar a entrada para reduzir a parcela.');
+            }
+
+            // Dica sobre tipo de imóvel
+            if (dados.tipoImovel === 'novo') {
+                dicas.push('🏗️ Imóveis novos geralmente têm melhores condições de financiamento e isenções fiscais.');
+            }
+
+            // Dica sobre FGTS
+            if (dados.fgts > 0) {
+                dicas.push('🏦 Usando FGTS você reduz a entrada necessária e pode negociar melhores condições.');
+            } else {
+                dicas.push('💡 Se tiver FGTS disponível, pode usar para entrada, redução de parcelas ou amortização.');
+            }
+
+            return dicas.map(dica => `
+                <div class="alert alert-info">
+                    <span>💡</span>
+                    <div>${dica}</div>
+                </div>
+            `).join('');
+        }
+
+        // Mostrar erro
+        function mostrarErro(mensagem) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="result-card">
+                    <div class="alert alert-danger">
+                        <span>❌</span>
+                        <div><strong>Erro:</strong> ${mensagem}</div>
+                    </div>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Inputs de moeda
+            setupMoneyInputs();
+            
+            // Tipo de imóvel
+            setupTipoImovel();
+            
+            // Modo de simulação
+            setupModoSimulacao();
+            
+            // Selects específicos
+            document.getElementById('sistema').addEventListener('change', () => {
+                setTimeout(validarFormulario, 100);
+            });
+            document.getElementById('itauSegmento').addEventListener('change', () => {
+                setTimeout(validarFormulario, 100);
+            });
+            
+            // Form submit
+            document.getElementById('calculatorForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('📝 Formulário submetido');
+                calcularFinanciamento();
+            });
+        }
+
+        // Inicializar
+        function init() {
+            console.log('🎯 Inicializando calculadora aprimorada...');
+            setupEventListeners();
+            validarFormulario();
+            console.log('✅ Calculadora pronta!');
+        }
+
+        // Iniciar quando página carregar
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
