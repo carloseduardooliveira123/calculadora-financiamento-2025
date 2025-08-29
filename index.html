@@ -107,7 +107,7 @@
             position: relative;
         }
 
-        .form-group input[type="number"] {
+        .form-group input[type="text"] {
             width: 100%;
             padding: 15px 20px;
             border: 2px solid #e9ecef;
@@ -115,9 +115,10 @@
             font-size: 1.1rem;
             transition: all 0.3s ease;
             background: white;
+            text-align: right;
         }
 
-        .form-group input[type="number"]:focus {
+        .form-group input[type="text"]:focus {
             border-color: #4CAF50;
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
             outline: none;
@@ -456,7 +457,7 @@
                         <span class="tooltip" data-tooltip="Valor total do imóvel que você deseja financiar">?</span>
                     </label>
                     <div class="input-wrapper">
-                        <input type="number" id="valorImovel" placeholder="Ex: 500000" min="0" step="1000" value="500000">
+                        <input type="text" id="valorImovel" placeholder="Ex: 500.000,00" value="500.000,00">
                         <div class="slider-container">
                             <input type="range" class="slider" id="sliderImovel" min="100000" max="2000000" step="10000" value="500000">
                         </div>
@@ -469,7 +470,7 @@
                         <span class="tooltip" data-tooltip="Valor que você tem disponível para dar de entrada">?</span>
                     </label>
                     <div class="input-wrapper">
-                        <input type="number" id="valorEntrada" placeholder="Ex: 100000" min="0" step="1000" value="100000">
+                        <input type="text" id="valorEntrada" placeholder="Ex: 100.000,00" value="100.000,00">
                         <div class="slider-container">
                             <input type="range" class="slider" id="sliderEntrada" min="0" max="500000" step="5000" value="100000">
                         </div>
@@ -486,7 +487,7 @@
                         <span class="tooltip" data-tooltip="Soma de todas as rendas comprovadas da família">?</span>
                     </label>
                     <div class="input-wrapper">
-                        <input type="number" id="rendaFamiliar" placeholder="Ex: 12000" min="0" step="100" value="12000">
+                        <input type="text" id="rendaFamiliar" placeholder="Ex: 12.000,00" value="12.000,00">
                         <div class="slider-container">
                             <input type="range" class="slider" id="sliderRenda" min="1000" max="50000" step="500" value="12000">
                         </div>
@@ -710,56 +711,107 @@
             const rendaFamiliar = document.getElementById('rendaFamiliar');
             const sliderRenda = document.getElementById('sliderRenda');
 
+            // Configurar formatação automática dos campos
+            setupCurrencyInput(valorImovel);
+            setupCurrencyInput(valorEntrada);
+            setupCurrencyInput(rendaFamiliar);
+
             // Sincronizar input do imóvel com slider
             valorImovel.addEventListener('input', function() {
-                sliderImovel.value = this.value;
+                const valor = parseFloat(this.value.replace(/\./g, '').replace(',', '.')) || 0;
+                sliderImovel.value = valor;
                 updateProgress();
                 updateSliderEntradaMax();
-                debugLog(`Valor imóvel alterado: ${this.value}`);
+                debugLog(`Valor imóvel alterado: ${valor}`);
             });
 
             sliderImovel.addEventListener('input', function() {
-                valorImovel.value = this.value;
+                const valor = parseFloat(this.value);
+                valorImovel.value = formatarMoedaBrasil(valor);
                 updateProgress();
                 updateSliderEntradaMax();
-                debugLog(`Slider imóvel alterado: ${this.value}`);
+                debugLog(`Slider imóvel alterado: ${valor}`);
             });
 
             // Sincronizar input da entrada com slider
             valorEntrada.addEventListener('input', function() {
-                sliderEntrada.value = this.value;
+                const valor = parseFloat(this.value.replace(/\./g, '').replace(',', '.')) || 0;
+                sliderEntrada.value = valor;
                 updateProgress();
-                debugLog(`Valor entrada alterado: ${this.value}`);
+                debugLog(`Valor entrada alterado: ${valor}`);
             });
 
             sliderEntrada.addEventListener('input', function() {
-                valorEntrada.value = this.value;
+                const valor = parseFloat(this.value);
+                valorEntrada.value = formatarMoedaBrasil(valor);
                 updateProgress();
-                debugLog(`Slider entrada alterado: ${this.value}`);
+                debugLog(`Slider entrada alterado: ${valor}`);
             });
 
             // Sincronizar input da renda com slider
             rendaFamiliar.addEventListener('input', function() {
-                sliderRenda.value = this.value;
-                debugLog(`Renda alterada: ${this.value}`);
+                const valor = parseFloat(this.value.replace(/\./g, '').replace(',', '.')) || 0;
+                sliderRenda.value = valor;
+                debugLog(`Renda alterada: ${valor}`);
             });
 
             sliderRenda.addEventListener('input', function() {
-                rendaFamiliar.value = this.value;
-                debugLog(`Slider renda alterado: ${this.value}`);
+                const valor = parseFloat(this.value);
+                rendaFamiliar.value = formatarMoedaBrasil(valor);
+                debugLog(`Slider renda alterado: ${valor}`);
             });
         }
 
+        function setupCurrencyInput(input) {
+            // Formatação automática durante digitação
+            input.addEventListener('input', function(e) {
+                let valor = e.target.value;
+                
+                // Remove tudo exceto números
+                valor = valor.replace(/[^\d]/g, '');
+                
+                // Converte para número e formata
+                if (valor) {
+                    const numero = parseFloat(valor);
+                    e.target.value = formatarMoedaBrasil(numero);
+                } else {
+                    e.target.value = '';
+                }
+            });
+
+            // Formatar ao sair do campo
+            input.addEventListener('blur', function(e) {
+                const valor = parseFloat(e.target.value.replace(/\./g, '').replace(',', '.')) || 0;
+                if (valor > 0) {
+                    e.target.value = formatarMoedaBrasil(valor);
+                }
+            });
+        }
+
+        function formatarMoedaBrasil(valor) {
+            if (isNaN(valor) || valor === 0) return '';
+            
+            return new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(valor);
+        }
+
+        function obterValorNumerico(inputId) {
+            const valor = document.getElementById(inputId).value;
+            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
         function updateSliderEntradaMax() {
-            const valorImovel = parseFloat(document.getElementById('valorImovel').value) || 0;
+            const valorImovel = obterValorNumerico('valorImovel');
             const sliderEntrada = document.getElementById('sliderEntrada');
             sliderEntrada.max = valorImovel;
             debugLog(`Máximo do slider entrada atualizado: ${valorImovel}`);
         }
 
         function updateProgress() {
-            const valorImovel = parseFloat(document.getElementById('valorImovel').value) || 0;
-            const valorEntrada = parseFloat(document.getElementById('valorEntrada').value) || 0;
+            const valorImovel = obterValorNumerico('valorImovel');
+            const valorEntrada = obterValorNumerico('valorEntrada');
             
             if (valorImovel > 0) {
                 const percentual = (valorEntrada / valorImovel) * 100;
@@ -820,9 +872,9 @@
         function calcularFinanciamento() {
             debugLog('🧮 INICIANDO CÁLCULO DE FINANCIAMENTO');
             
-            const valorImovel = parseFloat(document.getElementById('valorImovel').value);
-            const valorEntrada = parseFloat(document.getElementById('valorEntrada').value);
-            const rendaFamiliar = parseFloat(document.getElementById('rendaFamiliar').value);
+            const valorImovel = obterValorNumerico('valorImovel');
+            const valorEntrada = obterValorNumerico('valorEntrada');
+            const rendaFamiliar = obterValorNumerico('rendaFamiliar');
             
             debugLog(`Dados informados: Imóvel=${valorImovel}, Entrada=${valorEntrada}, Renda=${rendaFamiliar}, Sistema=${sistemaAtual}`);
             
@@ -833,7 +885,7 @@
                 return;
             }
 
-            if (!valorEntrada || valorEntrada < 0) {
+            if (valorEntrada < 0) {
                 showAlert('❌ Informe o valor da entrada.', 'danger');
                 debugLog('ERRO: Valor da entrada inválido');
                 return;
@@ -1269,10 +1321,10 @@
         }
 
         function novaSimulacao() {
-            // Limpar campos mantendo valores padrão
-            document.getElementById('valorImovel').value = '500000';
-            document.getElementById('valorEntrada').value = '100000';
-            document.getElementById('rendaFamiliar').value = '12000';
+            // Limpar campos mantendo valores padrão com formatação
+            document.getElementById('valorImovel').value = '500.000,00';
+            document.getElementById('valorEntrada').value = '100.000,00';
+            document.getElementById('rendaFamiliar').value = '12.000,00';
             
             // Resetar sliders
             document.getElementById('sliderImovel').value = '500000';
