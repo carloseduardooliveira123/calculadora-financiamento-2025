@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Inteligente de Financiamento Imobiliário 2025</title>
+    <title>🏠 Simulador Inteligente - Financiamento Imobiliário 2025</title>
     <style>
         * {
             margin: 0;
@@ -15,18 +15,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
-        .calculator-container {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            max-width: 1000px;
-            width: 100%;
             overflow: hidden;
         }
 
@@ -38,266 +35,290 @@
         }
 
         .header h1 {
-            font-size: 2.5em;
+            font-size: 2.5rem;
             margin-bottom: 10px;
-            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .update-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin-top: 10px;
-            display: inline-block;
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
-        .calculator-content {
-            padding: 40px;
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
         }
 
         .form-group {
             margin-bottom: 25px;
         }
 
-        .form-group.hidden {
-            display: none;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
+        .form-group label {
+            display: flex;
+            align-items: center;
             font-weight: 600;
+            margin-bottom: 8px;
             color: #333;
-            font-size: 1.1em;
+            font-size: 1.1rem;
         }
 
-        .required {
-            color: #e74c3c;
-        }
-
-        input[type="text"], select {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-
-        .input-prefix {
+        .tooltip {
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-left: 8px;
+            cursor: help;
             position: relative;
         }
 
-        .input-prefix::before {
-            content: 'R$';
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
             position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
-            font-weight: 600;
-            z-index: 1;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
         }
 
-        .input-prefix input {
-            padding-left: 45px;
+        .input-wrapper {
+            position: relative;
         }
 
-        .tipo-imovel-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .tipo-option {
-            border: 2px solid #e0e0e0;
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
             border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
+            font-size: 1.1rem;
             transition: all 0.3s ease;
             background: white;
         }
 
-        .tipo-option:hover {
+        .form-group input[type="number"]:focus {
             border-color: #4CAF50;
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            outline: none;
         }
 
-        .tipo-option.selected {
-            border-color: #4CAF50;
-            background: #f8fff8;
+        .slider-container {
+            margin-top: 10px;
         }
 
-        .tipo-option .icon {
-            font-size: 2em;
-            margin-bottom: 10px;
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
 
-        .tipo-option .name {
-            font-weight: 600;
-            color: #333;
+        .slider:hover {
+            opacity: 1;
         }
 
-        .banco-selection {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .banco-mode {
-            flex: 1;
-            min-width: 200px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
             cursor: pointer;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573);
             transition: all 0.3s ease;
+            border-radius: 4px;
         }
 
-        .banco-mode:hover {
-            border-color: #4CAF50;
-            transform: translateY(-2px);
+        .banks-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
         }
 
-        .banco-mode.selected {
-            border-color: #4CAF50;
-            background: #f8fff8;
-        }
-
-        .banco-mode .icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        .banco-mode .title {
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .banco-mode .description {
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .banco-grid {
+        .banks-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
-        .banco-option {
-            border: 2px solid #e0e0e0;
+        .bank-option {
+            background: white;
+            border: 2px solid #e9ecef;
             border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+            padding: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
         }
 
-        .banco-option:hover {
+        .bank-option:hover {
             border-color: #4CAF50;
-            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
         }
 
-        .banco-option.selected {
+        .bank-option.selected {
             border-color: #4CAF50;
-            background: #f8fff8;
+            background: #f0f9f0;
         }
 
-        .banco-option.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
+        .bank-option input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
         }
 
-        .banco-name {
-            font-weight: 700;
+        .bank-name {
+            font-weight: 600;
+            color: #333;
             margin-bottom: 5px;
         }
 
-        .banco-details {
-            font-size: 0.85em;
+        .bank-details {
+            font-size: 0.9rem;
             color: #666;
         }
 
-        .status-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
+        .system-toggle {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
+            background: #e9ecef;
+            border-radius: 25px;
+            padding: 4px;
+            margin-top: 15px;
         }
 
-        .status-available {
+        .system-toggle button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .system-toggle button.active {
             background: #4CAF50;
             color: white;
         }
 
-        .status-limited {
-            background: #FF9800;
+        .calculate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .status-blocked {
-            background: #f44336;
-            color: white;
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #4CAF50;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #333;
         }
 
         .alert {
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin: 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+            font-weight: 500;
         }
 
         .alert-danger {
@@ -306,1126 +327,529 @@
             border: 1px solid #f5c6cb;
         }
 
-        .calculate-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .comparator {
+            margin-top: 30px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .comparator-header {
+            background: #4CAF50;
             color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.2em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 30px;
+            padding: 15px 20px;
+            font-weight: 600;
         }
 
-        .calculate-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .calculate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
         }
 
-        .results-container {
-            margin-top: 30px;
-            display: none;
-        }
-
-        .result-card {
+        .comparison-table th {
             background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-
-        .result-header {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: #4CAF50;
-            margin-bottom: 20px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .result-item {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            border-left: 4px solid #4CAF50;
-        }
-
-        .result-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .result-value {
-            font-size: 1.4em;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .comparison-section {
-            margin-top: 30px;
-        }
-
-        .comparison-grid {
-            display: grid;
-            gap: 15px;
-        }
-
-        .comparison-item {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .comparison-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .comparison-item.best {
-            border-color: #4CAF50;
-            background: #f8fff8;
-        }
-
-        .comparison-item.best .comparison-header::after {
-            content: ' 🏆';
-        }
-
-        .comparison-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .banco-info {
-            font-weight: 700;
-            font-size: 1.1em;
-        }
-
-        .taxa-info {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .comparison-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-        }
-
-        .detail-item {
-            text-align: center;
-        }
-
-        .detail-label {
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
             font-weight: 600;
             color: #333;
         }
 
-        .no-results {
-            text-align: center;
-            padding: 40px;
-            color: #666;
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .banks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #4CAF50;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="calculator-container">
+    <div class="container">
         <div class="header">
             <h1>🏠 Simulador Inteligente</h1>
-            <p>Financiamento Imobiliário 2025</p>
-            <div class="update-badge">✨ Atualizado Agosto/2025</div>
+            <p>Financiamento Imobiliário 2025 - Compare e escolha a melhor opção</p>
         </div>
 
-        <div class="calculator-content">
-            <form id="calculatorForm">
-                <!-- Tipo de Imóvel -->
+        <div class="main-content">
+            <div class="form-section">
+                <h2>📋 Dados da Simulação</h2>
+                
                 <div class="form-group">
-                    <label>🏡 Tipo do Imóvel <span class="required">*</span></label>
-                    <div class="tipo-imovel-grid">
-                        <div class="tipo-option" data-tipo="novo">
-                            <div class="icon">🏗️</div>
-                            <div class="name">Imóvel Novo</div>
-                        </div>
-                        <div class="tipo-option" data-tipo="usado">
-                            <div class="icon">🏠</div>
-                            <div class="name">Imóvel Usado</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Valor do Imóvel e Renda -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="valorImovel">💰 Valor do Imóvel <span class="required">*</span></label>
-                        <div class="input-prefix">
-                            <input type="text" id="valorImovel" placeholder="500.000,00" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="rendaFamiliar">👨‍👩‍👧‍👦 Renda Familiar <span class="required">*</span></label>
-                        <div class="input-prefix">
-                            <input type="text" id="rendaFamiliar" placeholder="8.000,00" required>
+                    <label for="valorImovel">
+                        Valor do Imóvel
+                        <span class="tooltip" data-tooltip="Valor total do imóvel que você deseja financiar">?</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="number" id="valorImovel" placeholder="Ex: 500000" min="0" step="1000">
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sliderImovel" min="100000" max="2000000" step="10000">
                         </div>
                     </div>
                 </div>
 
-                <!-- Entrada e FGTS -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="entrada">💳 Valor da Entrada</label>
-                        <div class="input-prefix">
-                            <input type="text" id="entrada" placeholder="100.000,00">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fgts">🏦 Valor FGTS</label>
-                        <div class="input-prefix">
-                            <input type="text" id="fgts" placeholder="50.000,00">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modo de Seleção de Banco -->
                 <div class="form-group">
-                    <label>🎯 Modo de Simulação <span class="required">*</span></label>
-                    <div class="banco-selection">
-                        <div class="banco-mode" data-mode="all">
-                            <div class="icon">🔄</div>
-                            <div class="title">Todos os Bancos</div>
-                            <div class="description">Compare automaticamente todas as opções</div>
+                    <label for="valorEntrada">
+                        Valor da Entrada
+                        <span class="tooltip" data-tooltip="Valor que você tem disponível para dar de entrada">?</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="number" id="valorEntrada" placeholder="Ex: 100000" min="0" step="1000">
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sliderEntrada" min="0" max="500000" step="5000">
                         </div>
-                        <div class="banco-mode" data-mode="single">
-                            <div class="icon">🎯</div>
-                            <div class="title">Banco Específico</div>
-                            <div class="description">Escolha um banco para simular</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressEntrada"></div>
+                        </div>
+                        <small id="percentualEntrada">0% do valor do imóvel</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="rendaFamiliar">
+                        Renda Familiar Bruta
+                        <span class="tooltip" data-tooltip="Soma de todas as rendas comprovadas da família">?</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="number" id="rendaFamiliar" placeholder="Ex: 12000" min="0" step="100">
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sliderRenda" min="1000" max="50000" step="500">
                         </div>
                     </div>
-                    <div id="modoAlert"></div>
                 </div>
 
-                <!-- Seleção de Banco Individual -->
-                <div class="form-group hidden" id="bancoEspecificoGroup">
-                    <label>🏛️ Escolha o Banco</label>
-                    <div class="banco-grid" id="bancoGrid">
-                        <!-- Bancos serão inseridos via JavaScript -->
+                <div class="form-group">
+                    <label>Sistema de Amortização</label>
+                    <div class="system-toggle">
+                        <button type="button" class="system-btn active" data-system="SAC">
+                            SAC <span class="tooltip" data-tooltip="Parcelas decrescentes, juros menores no total">?</span>
+                        </button>
+                        <button type="button" class="system-btn" data-system="PRICE">
+                            PRICE <span class="tooltip" data-tooltip="Parcelas fixas, mais fácil de planejar">?</span>
+                        </button>
                     </div>
-                    <div id="bancoAlert"></div>
+                </div>
+            </div>
+
+            <div class="banks-section">
+                <h2>🏦 Escolha os Bancos</h2>
+                <p>Selecione um ou mais bancos para comparar as condições</p>
+                
+                <div class="banks-grid">
+                    <div class="bank-option" data-bank="caixa">
+                        <input type="checkbox" id="banco_caixa" name="banco" value="caixa">
+                        <div class="bank-name">🏛️ Caixa Econômica Federal</div>
+                        <div class="bank-details">
+                            Taxa: 8,16% a.a + TR<br>
+                            MCMV disponível<br>
+                            Até 90% financiamento
+                        </div>
+                    </div>
+
+                    <div class="bank-option" data-bank="bb">
+                        <input type="checkbox" id="banco_bb" name="banco" value="bb">
+                        <div class="bank-name">🟡 Banco do Brasil</div>
+                        <div class="bank-details">
+                            Taxa: 8,99% a.a + TR<br>
+                            Financiamento até 80%<br>
+                            Prazo até 35 anos
+                        </div>
+                    </div>
+
+                    <div class="bank-option" data-bank="bradesco">
+                        <input type="checkbox" id="banco_bradesco" name="banco" value="bradesco">
+                        <div class="bank-name">🔴 Bradesco</div>
+                        <div class="bank-details">
+                            Taxa: 9,75% a.a + TR<br>
+                            Financiamento até 80%<br>
+                            Relacionamento bancário
+                        </div>
+                    </div>
+
+                    <div class="bank-option" data-bank="santander">
+                        <input type="checkbox" id="banco_santander" name="banco" value="santander">
+                        <div class="bank-name">🔺 Santander</div>
+                        <div class="bank-details">
+                            Taxa: 9,49% a.a + TR<br>
+                            Financiamento até 80%<br>
+                            Condições especiais
+                        </div>
+                    </div>
+
+                    <div class="bank-option" data-bank="itau">
+                        <input type="checkbox" id="banco_itau" name="banco" value="itau">
+                        <div class="bank-name">🟠 Itaú</div>
+                        <div class="bank-details">
+                            Taxa: 9,89% a.a + TR<br>
+                            Financiamento até 80%<br>
+                            Prazo até 35 anos
+                        </div>
+                    </div>
+
+                    <div class="bank-option" data-bank="inter">
+                        <input type="checkbox" id="banco_inter" name="banco" value="inter">
+                        <div class="bank-name">🟧 Banco Inter</div>
+                        <div class="bank-details">
+                            Taxa: 8,99% a.a + TR<br>
+                            100% digital<br>
+                            Processo simplificado
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Campos Específicos por Banco -->
-                <div class="form-group hidden" id="sistemaGroup">
-                    <label for="sistema">📊 Sistema de Amortização (Caixa)</label>
-                    <select id="sistema">
-                        <option value="sac">SAC - Prestações Decrescentes (70% LTV)</option>
-                        <option value="price">PRICE - Prestações Fixas (50% LTV)</option>
-                    </select>
-                </div>
-
-                <div class="form-group hidden" id="itauGroup">
-                    <label for="itauSegmento">🏛️ Segmento Itaú</label>
-                    <select id="itauSegmento">
-                        <option value="agencias">Agências (Renda mín: R$ 7.000)</option>
-                        <option value="personnalite">Personnalité</option>
-                        <option value="uniclass">Uniclass</option>
-                        <option value="repasse">Produto Repasse (90% LTV)</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="calculate-btn" id="calculateBtn" disabled>
-                    🧮 Simular Financiamento
+                <button class="calculate-btn" onclick="calcularFinanciamento()">
+                    📊 Calcular Financiamento
                 </button>
-            </form>
+            </div>
 
-            <div class="results-container" id="resultsContainer">
-                <!-- Resultados aparecerão aqui -->
+            <div class="results-section hidden" id="resultsSection">
+                <h2>📈 Resultados da Simulação</h2>
+                <div id="alertsContainer"></div>
+                <div class="results-grid" id="resultsGrid"></div>
+                
+                <div class="comparator" id="comparator">
+                    <div class="comparator-header">
+                        🔍 Comparativo Detalhado
+                    </div>
+                    <table class="comparison-table" id="comparisonTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        console.log('🚀 Calculadora iniciada!');
-
-        // Dados dos bancos
-        const bancos = {
+        // Configurações dos bancos com dados corretos
+        const bancosConfig = {
             caixa: {
-                nome: 'Caixa Econômica',
-                taxa: 11.29,
-                valorMax: 1500000,
-                sistemas: {
-                    sac: { ltv: 70, entrada: 30 },
-                    price: { ltv: 50, entrada: 50 }
-                }
+                nome: "Caixa Econômica Federal",
+                taxa: 8.16,
+                maxFinanciamento: 90, // MCMV permite até 90%
+                mcmv: true,
+                limiteMcmv: 350000,
+                subsidioMcmv: 47500,
+                taxaMcmv: 5.95
             },
             bb: {
-                nome: 'Banco do Brasil',
-                taxa: 12.00,
-                ltv: 80,
-                valorMax: 5000000,
-                valorMin: 20000
-            },
-            itau: {
-                nome: 'Itaú',
-                taxa: 12.19,
-                valorMax: 2000000,
-                segmentos: {
-                    agencias: { ltv: 80, rendaMin: 7000 },
-                    personnalite: { ltv: 80, rendaMin: 0 },
-                    uniclass: { ltv: 80, rendaMin: 0 },
-                    repasse: { ltv: 90, rendaMin: 0 }
-                }
-            },
-            santander: {
-                nome: 'Santander',
-                taxa: 12.50,
-                ltv: 80,
-                valorMax: 2000000
+                nome: "Banco do Brasil",
+                taxa: 8.99,
+                maxFinanciamento: 80,
+                mcmv: false
             },
             bradesco: {
-                nome: 'Bradesco',
-                taxa: 13.50,
-                ltv: 70,
-                valorMax: 2000000
+                nome: "Bradesco",
+                taxa: 9.75,
+                maxFinanciamento: 80,
+                mcmv: false
+            },
+            santander: {
+                nome: "Santander",
+                taxa: 9.49,
+                maxFinanciamento: 80,
+                mcmv: false
+            },
+            itau: {
+                nome: "Itaú",
+                taxa: 9.89,
+                maxFinanciamento: 80,
+                mcmv: false
             },
             inter: {
-                nome: 'Banco Inter',
-                taxa: 9.40,
-                ltv: 75,
-                valorMax: 2000000,
-                rendaBruta: true
-            },
-            sicredi: {
-                nome: 'Sicredi',
-                taxa: 7.50,
-                ltv: 90,
-                valorMax: 1500000
-            },
-            sicoob: {
-                nome: 'Sicoob',
-                taxa: 7.50,
-                ltv: 80,
-                valorMax: 1500000
+                nome: "Banco Inter",
+                taxa: 8.99,
+                maxFinanciamento: 80,
+                mcmv: false
             }
         };
 
-        let tipoImovel = null;
-        let modoSimulacao = null;
-        let bancoSelecionado = null;
+        let sistemaAtual = 'SAC';
 
-        // Formatação de moeda
-        function formatMoney(valor) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            }).format(valor);
-        }
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Garantir que todos os checkboxes iniciem desmarcados
+            document.querySelectorAll('input[type="checkbox"][name="banco"]').forEach(cb => {
+                cb.checked = false;
+            });
 
-        function parseMoney(valor) {
-            if (!valor) return 0;
-            return parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        }
+            // Configurar sliders
+            setupSliders();
+            
+            // Configurar eventos dos bancos
+            setupBankSelection();
+            
+            // Configurar sistema de amortização
+            setupSystemToggle();
+        });
 
-        function formatNumber(value) {
-            const num = value.replace(/\D/g, '');
-            return new Intl.NumberFormat('pt-BR').format(parseInt(num) / 100 || 0);
-        }
+        function setupSliders() {
+            const valorImovel = document.getElementById('valorImovel');
+            const sliderImovel = document.getElementById('sliderImovel');
+            const valorEntrada = document.getElementById('valorEntrada');
+            const sliderEntrada = document.getElementById('sliderEntrada');
+            const rendaFamiliar = document.getElementById('rendaFamiliar');
+            const sliderRenda = document.getElementById('sliderRenda');
 
-        function setupMoneyInputs() {
-            ['valorImovel', 'rendaFamiliar', 'entrada', 'fgts'].forEach(id => {
-                const input = document.getElementById(id);
-                
-                input.addEventListener('input', (e) => {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value) {
-                        const formatted = formatNumber(value + '00');
-                        e.target.value = formatted;
-                    }
-                    // Chamar validação após cada input
-                    setTimeout(validarFormulario, 100);
-                });
+            // Sincronizar slider com input
+            valorImovel.addEventListener('input', function() {
+                sliderImovel.value = this.value;
+                updateProgress();
+                updateSliderEntradaMax();
+            });
 
-                input.addEventListener('blur', (e) => {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value) {
-                        const num = parseInt(value) / 100;
-                        e.target.value = num.toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                    }
-                    // Chamar validação após blur
-                    setTimeout(validarFormulario, 100);
-                });
+            sliderImovel.addEventListener('input', function() {
+                valorImovel.value = this.value;
+                updateProgress();
+                updateSliderEntradaMax();
+            });
+
+            valorEntrada.addEventListener('input', function() {
+                sliderEntrada.value = this.value;
+                updateProgress();
+            });
+
+            sliderEntrada.addEventListener('input', function() {
+                valorEntrada.value = this.value;
+                updateProgress();
+            });
+
+            rendaFamiliar.addEventListener('input', function() {
+                sliderRenda.value = this.value;
+            });
+
+            sliderRenda.addEventListener('input', function() {
+                rendaFamiliar.value = this.value;
             });
         }
 
-        // Renderizar bancos
-        function renderBancos() {
-            const grid = document.getElementById('bancoGrid');
-            grid.innerHTML = '';
+        function updateSliderEntradaMax() {
+            const valorImovel = parseFloat(document.getElementById('valorImovel').value) || 0;
+            const sliderEntrada = document.getElementById('sliderEntrada');
+            sliderEntrada.max = valorImovel;
+        }
+
+        function updateProgress() {
+            const valorImovel = parseFloat(document.getElementById('valorImovel').value) || 0;
+            const valorEntrada = parseFloat(document.getElementById('valorEntrada').value) || 0;
             
-            const valorImovel = parseMoney(document.getElementById('valorImovel').value);
-            
-            Object.keys(bancos).forEach(key => {
-                const banco = bancos[key];
-                const div = document.createElement('div');
-                div.className = 'banco-option';
-                div.dataset.banco = key;
+            if (valorImovel > 0) {
+                const percentual = (valorEntrada / valorImovel) * 100;
+                const progressFill = document.getElementById('progressEntrada');
+                const percentualText = document.getElementById('percentualEntrada');
                 
-                // IMPORTANTE: Resetar seleção ao renderizar
-                if (bancoSelecionado !== key) {
-                    // Não marcar como selecionado
-                }
+                progressFill.style.width = Math.min(percentual, 100) + '%';
+                percentualText.textContent = `${percentual.toFixed(1)}% do valor do imóvel`;
                 
-                // Verificar disponibilidade
-                let status = 'available';
-                let statusIcon = '✓';
-                
-                if (banco.valorMax && valorImovel > banco.valorMax) {
-                    status = 'blocked';
-                    statusIcon = '✗';
-                    div.classList.add('disabled');
-                } else if (banco.valorMin && valorImovel > 0 && valorImovel < banco.valorMin) {
-                    status = 'blocked';
-                    statusIcon = '✗';
-                    div.classList.add('disabled');
-                }
-                
-                div.innerHTML = `
-                    <div class="status-indicator status-${status}">${statusIcon}</div>
-                    <div class="banco-name">${banco.nome}</div>
-                    <div class="banco-details">
-                        Taxa: ${banco.taxa}% a.a.<br>
-                        LTV: ${banco.ltv || 'Variável'}%
-                    </div>
-                `;
-                
-                if (!div.classList.contains('disabled')) {
-                    div.addEventListener('click', () => selecionarBanco(key));
-                }
-                
-                grid.appendChild(div);
-            });
-            
-            // Aplicar seleção atual se houver
-            if (bancoSelecionado) {
-                const bancoElement = document.querySelector(`[data-banco="${bancoSelecionado}"]`);
-                if (bancoElement && !bancoElement.classList.contains('disabled')) {
-                    bancoElement.classList.add('selected');
+                // Colorir baseado no percentual
+                if (percentual < 20) {
+                    progressFill.style.background = '#ff4757';
+                } else if (percentual < 30) {
+                    progressFill.style.background = '#ffa502';
+                } else {
+                    progressFill.style.background = '#2ed573';
                 }
             }
         }
 
-        // Selecionar tipo de imóvel
-        function setupTipoImovel() {
-            document.querySelectorAll('.tipo-option').forEach(option => {
-                option.addEventListener('click', () => {
-                    tipoImovel = option.dataset.tipo;
+        function setupBankSelection() {
+            document.querySelectorAll('.bank-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
                     
-                    console.log('🏡 Tipo selecionado:', tipoImovel);
-                    
-                    document.querySelectorAll('.tipo-option').forEach(el => {
-                        el.classList.remove('selected');
-                    });
-                    option.classList.add('selected');
-                    
-                    // Chamar validação
-                    setTimeout(validarFormulario, 100);
-                });
-            });
-        }
-
-        // Selecionar modo de simulação
-        function setupModoSimulacao() {
-            document.querySelectorAll('.banco-mode').forEach(mode => {
-                mode.addEventListener('click', () => {
-                    modoSimulacao = mode.dataset.mode;
-                    
-                    console.log('🎯 Modo selecionado:', modoSimulacao);
-                    
-                    // Limpar seleções visuais
-                    document.querySelectorAll('.banco-mode').forEach(el => {
-                        el.classList.remove('selected');
-                    });
-                    mode.classList.add('selected');
-                    
-                    // Resetar seleção de banco ao mudar modo
-                    bancoSelecionado = null;
-                    
-                    // Mostrar/esconder seleção de banco específico
-                    const bancoGroup = document.getElementById('bancoEspecificoGroup');
-                    const modoAlert = document.getElementById('modoAlert');
-                    
-                    if (modoSimulacao === 'single') {
-                        bancoGroup.classList.remove('hidden');
-                        renderBancos(); // Renderizar sem seleções
-                        modoAlert.innerHTML = `
-                            <div class="alert alert-info">
-                                <span>🎯</span>
-                                <div><strong>Modo Banco Específico:</strong> Selecione um banco acima para simular</div>
-                            </div>
-                        `;
+                    if (checkbox.checked) {
+                        this.classList.add('selected');
                     } else {
-                        bancoGroup.classList.add('hidden');
-                        modoAlert.innerHTML = `
-                            <div class="alert alert-success">
-                                <span>🔄</span>
-                                <div><strong>Todos os Bancos Selecionados!</strong> Clique em "Simular" para comparar todas as opções disponíveis</div>
-                            </div>
-                        `;
+                        this.classList.remove('selected');
                     }
-                    
-                    // Esconder campos específicos
-                    document.getElementById('sistemaGroup').classList.add('hidden');
-                    document.getElementById('itauGroup').classList.add('hidden');
-                    
-                    // Chamar validação
-                    setTimeout(validarFormulario, 100);
                 });
             });
         }
 
-        // Selecionar banco
-        function selecionarBanco(key) {
-            console.log(`🏛️ Banco selecionado: ${key}`);
-            bancoSelecionado = key;
-            
-            document.querySelectorAll('.banco-option').forEach(el => {
-                el.classList.remove('selected');
+        function setupSystemToggle() {
+            document.querySelectorAll('.system-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.system-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    sistemaAtual = this.dataset.system;
+                });
             });
-            document.querySelector(`[data-banco="${key}"]`).classList.add('selected');
-            
-            // Mostrar campos específicos
-            document.getElementById('sistemaGroup').classList.add('hidden');
-            document.getElementById('itauGroup').classList.add('hidden');
-            
-            if (key === 'caixa') {
-                document.getElementById('sistemaGroup').classList.remove('hidden');
-            }
-            
-            if (key === 'itau') {
-                document.getElementById('itauGroup').classList.remove('hidden');
-            }
-            
-            // Chamar validação
-            setTimeout(validarFormulario, 100);
         }
 
-        // Validar formulário
-        function validarFormulario() {
-            const valorImovel = parseMoney(document.getElementById('valorImovel').value);
-            const renda = parseMoney(document.getElementById('rendaFamiliar').value);
-            
-            console.log('🔍 Validando:', { 
-                tipoImovel, 
-                valorImovel, 
-                renda, 
-                modoSimulacao, 
-                bancoSelecionado 
-            });
-            
-            let isValid = tipoImovel && 
-                         valorImovel > 0 && 
-                         renda > 0 && 
-                         modoSimulacao &&
-                         (modoSimulacao === 'all' || bancoSelecionado);
-            
-            console.log('✅ Formulário válido:', isValid);
-            
-            const btn = document.getElementById('calculateBtn');
-            btn.disabled = !isValid;
-            
-            // Mudança visual do botão para debug
-            if (isValid) {
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-                btn.innerHTML = '🧮 Simular Financiamento';
-            } else {
-                btn.style.opacity = '0.6';
-                btn.style.cursor = 'not-allowed';
-                
-                // Mostrar o que está faltando
-                let faltando = [];
-                if (!tipoImovel) faltando.push('Tipo do imóvel');
-                if (!valorImovel) faltando.push('Valor do imóvel');
-                if (!renda) faltando.push('Renda familiar');
-                if (!modoSimulacao) faltando.push('Modo de simulação');
-                if (modoSimulacao === 'single' && !bancoSelecionado) faltando.push('Banco específico');
-                
-                btn.innerHTML = `⚠️ Preencha: ${faltando.join(', ')}`;
-            }
-            
-            // Atualizar grid de bancos se necessário
-            if (modoSimulacao === 'single' && valorImovel > 0) {
-                renderBancos();
-            }
-            
-            return isValid;
-        }
-
-        // Calcular financiamento
         function calcularFinanciamento() {
-            console.log('🧮 Iniciando cálculo...');
+            const valorImovel = parseFloat(document.getElementById('valorImovel').value);
+            const valorEntrada = parseFloat(document.getElementById('valorEntrada').value);
+            const rendaFamiliar = parseFloat(document.getElementById('rendaFamiliar').value);
             
-            const dados = {
-                tipoImovel,
-                valorImovel: parseMoney(document.getElementById('valorImovel').value),
-                renda: parseMoney(document.getElementById('rendaFamiliar').value),
-                entrada: parseMoney(document.getElementById('entrada').value),
-                fgts: parseMoney(document.getElementById('fgts').value),
-                modo: modoSimulacao,
-                banco: bancoSelecionado,
-                sistema: document.getElementById('sistema').value || 'sac',
-                itauSegmento: document.getElementById('itauSegmento').value || 'agencias'
-            };
-            
-            console.log('📊 Dados coletados:', dados);
-            
-            // Mostrar loading
-            mostrarLoading();
-            
-            // Simular delay para melhor UX
-            setTimeout(() => {
-                try {
-                    let resultados = [];
-                    
-                    if (dados.modo === 'all') {
-                        // Calcular todos os bancos
-                        console.log('🔄 Modo: Todos os bancos');
-                        
-                        Object.keys(bancos).forEach(bancoKey => {
-                            try {
-                                console.log(`🏛️ Testando ${bancoKey}...`);
-                                
-                                // Para cada banco, testar diferentes configurações
-                                if (bancoKey === 'caixa') {
-                                    // Testar SAC e Price para Caixa
-                                    ['sac', 'price'].forEach(sistema => {
-                                        const dadosTemp = { ...dados, sistema, banco: bancoKey };
-                                        const resultado = calcularBanco(bancoKey, dadosTemp);
-                                        if (resultado.aprovado) {
-                                            resultado.sistema = sistema;
-                                            resultado.identificador = `${bancoKey}_${sistema}`;
-                                            resultado.banco = `${resultado.banco} (${sistema.toUpperCase()})`;
-                                            resultados.push(resultado);
-                                            console.log(`✅ ${bancoKey} ${sistema.toUpperCase()} aprovado`);
-                                        } else {
-                                            console.log(`❌ ${bancoKey} ${sistema.toUpperCase()}: ${resultado.motivo}`);
-                                        }
-                                    });
-                                } else if (bancoKey === 'itau') {
-                                    // Testar melhor segmento do Itaú baseado na renda
-                                    let melhorSegmento = 'agencias';
-                                    if (dados.renda >= 7000) {
-                                        const segmentos = ['agencias', 'personnalite', 'uniclass', 'repasse'];
-                                        for (let segmento of segmentos) {
-                                            const dadosTemp = { ...dados, itauSegmento: segmento, banco: bancoKey };
-                                            const resultado = calcularBanco(bancoKey, dadosTemp);
-                                            if (resultado.aprovado) {
-                                                resultado.segmento = segmento;
-                                                resultado.identificador = `${bancoKey}_${segmento}`;
-                                                resultado.banco = `${resultado.banco} (${segmento})`;
-                                                resultados.push(resultado);
-                                                console.log(`✅ ${bancoKey} ${segmento} aprovado`);
-                                                break; // Usar apenas o primeiro que aprovar
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    // Bancos padrão
-                                    const dadosTemp = { ...dados, banco: bancoKey };
-                                    const resultado = calcularBanco(bancoKey, dadosTemp);
-                                    if (resultado.aprovado) {
-                                        resultado.identificador = bancoKey;
-                                        resultados.push(resultado);
-                                        console.log(`✅ ${bancoKey} aprovado`);
-                                    } else {
-                                        console.log(`❌ ${bancoKey}: ${resultado.motivo}`);
-                                    }
-                                }
-                            } catch (error) {
-                                console.error(`❌ Erro calculando ${bancoKey}:`, error);
-                            }
-                        });
-                        
-                        if (resultados.length > 0) {
-                            // Ordenar por parcela
-                            resultados.sort((a, b) => a.parcela - b.parcela);
-                            console.log('📈 Resultados ordenados por parcela');
-                            exibirComparacao(resultados, dados);
-                        } else {
-                            console.log('❌ Nenhum banco aprovou');
-                            exibirComparacao([], dados);
-                        }
-                        
-                    } else if (dados.modo === 'single' && dados.banco) {
-                        // Calcular banco específico
-                        console.log('🎯 Modo: Banco específico -', dados.banco);
-                        const resultado = calcularBanco(dados.banco, dados);
-                        console.log('📊 Resultado banco específico:', resultado);
-                        exibirResultadoUnico(resultado, dados);
-                    } else {
-                        throw new Error('Configuração inválida para cálculo');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Erro no cálculo:', error);
-                    mostrarErro(error.message);
+            // Validações básicas
+            if (!valorImovel || !valorEntrada || !rendaFamiliar) {
+                showAlert('Preencha todos os campos obrigatórios.', 'danger');
+                return;
+            }
+
+            if (valorEntrada >= valorImovel) {
+                showAlert('O valor da entrada não pode ser maior ou igual ao valor do imóvel.', 'danger');
+                return;
+            }
+
+            // Verificar bancos selecionados
+            const bancosSelecionados = Array.from(document.querySelectorAll('input[name="banco"]:checked'))
+                .map(cb => cb.value);
+
+            if (bancosSelecionados.length === 0) {
+                showAlert('Selecione pelo menos um banco para simular.', 'warning');
+                return;
+            }
+
+            // Calcular para cada banco
+            const resultados = [];
+            bancosSelecionados.forEach(bancoCodigo => {
+                const resultado = calcularBanco(bancoCodigo, valorImovel, valorEntrada, rendaFamiliar);
+                if (resultado) {
+                    resultados.push(resultado);
                 }
-            }, 800);
+            });
+
+            // Exibir resultados
+            exibirResultados(resultados);
         }
 
-        // Mostrar loading
-        function mostrarLoading() {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Calculando as melhores opções para você...</p>
-                </div>
-            `;
-            container.style.display = 'block';
-        }
+        function calcularBanco(bancoCodigo, valorImovel, valorEntrada, rendaFamiliar) {
+            const banco = bancosConfig[bancoCodigo];
+            let valorFinanciar = valorImovel - valorEntrada;
+            
+            // Verificar se é elegível para MCMV
+            const elegibilidadeMcmv = verificarMCMV(bancoCodigo, valorImovel, rendaFamiliar);
+            
+            let taxa = banco.taxa;
+            let subsidio = 0;
+            
+            if (elegibilidadeMcmv.elegivel) {
+                taxa = banco.taxaMcmv || banco.taxa;
+                subsidio = banco.subsidioMcmv || 0;
+                valorFinanciar -= subsidio;
+            }
 
-        // Calcular para um banco específico
-        function calcularBanco(bancoKey, dados) {
-            const banco = bancos[bancoKey];
+            // Verificar percentual máximo de financiamento
+            const percentualFinanciamento = (valorFinanciar / valorImovel) * 100;
+            const maxPermitido = elegibilidadeMcmv.elegivel ? 90 : banco.maxFinanciamento;
             
-            // Determinar LTV
-            let ltv = 80;
-            if (bancoKey === 'caixa') {
-                ltv = banco.sistemas[dados.sistema].ltv;
-            } else if (bancoKey === 'itau') {
-                ltv = banco.segmentos[dados.itauSegmento].ltv;
-                const rendaMin = banco.segmentos[dados.itauSegmento].rendaMin;
-                if (rendaMin > 0 && dados.renda < rendaMin) {
-                    return { aprovado: false, motivo: `Renda mínima: ${formatMoney(rendaMin)}` };
-                }
-            } else {
-                ltv = banco.ltv;
-            }
-            
-            // Verificar limites
-            if (banco.valorMax && dados.valorImovel > banco.valorMax) {
-                return { aprovado: false, motivo: `Limite máximo: ${formatMoney(banco.valorMax)}` };
-            }
-            
-            if (banco.valorMin && dados.valorImovel < banco.valorMin) {
-                return { aprovado: false, motivo: `Valor mínimo: ${formatMoney(banco.valorMin)}` };
-            }
-            
-            // Calcular financiamento
-            const valorMaxFinanciado = dados.valorImovel * (ltv / 100);
-            const entradaDisponivel = dados.entrada + dados.fgts;
-            const valorFinanciado = Math.min(valorMaxFinanciado, dados.valorImovel - entradaDisponivel);
-            const entradaNecessaria = dados.valorImovel - valorFinanciado;
-            
-            if (valorFinanciado <= 0) {
-                return { aprovado: false, motivo: 'Valor a financiar muito baixo' };
-            }
-            
-            if (entradaNecessaria > entradaDisponivel) {
-                return { 
-                    aprovado: false, 
-                    motivo: `Entrada insuficiente. Necessário: ${formatMoney(entradaNecessaria)}` 
+            if (percentualFinanciamento > maxPermitido) {
+                const entradaMinima = valorImovel * (1 - maxPermitido / 100);
+                return {
+                    banco: banco.nome,
+                    aprovado: false,
+                    motivo: `Entrada insuficiente. Necessário pelo menos R$ ${formatarMoeda(entradaMinima)}`,
+                    entradaMinima: entradaMinima,
+                    mcmv: elegibilidadeMcmv.elegivel,
+                    subsidio: subsidio
                 };
             }
+
+            // Calcular prestação
+            const prazoMeses = 360; // 30 anos
+            const taxaMensal = taxa / 100 / 12;
             
-            // Calcular parcela
-            const taxaMensal = banco.taxa / 100 / 12;
-            const prazo = 360; // 30 anos
-            
-            let parcela;
-            if (dados.sistema === 'price' && bancoKey === 'caixa') {
-                const fator = Math.pow(1 + taxaMensal, prazo);
-                parcela = valorFinanciado * (taxaMensal * fator) / (fator - 1);
+            let prestacao;
+            if (sistemaAtual === 'SAC') {
+                prestacao = calcularSAC(valorFinanciar, taxaMensal, prazoMeses);
             } else {
-                // SAC - primeira parcela
-                const amortizacao = valorFinanciado / prazo;
-                const juros = valorFinanciado * taxaMensal;
-                parcela = amortizacao + juros;
+                prestacao = calcularPRICE(valorFinanciar, taxaMensal, prazoMeses);
             }
+
+            // Verificar capacidade de pagamento (30% da renda)
+            const maxPrestacao = rendaFamiliar * 0.3;
             
-            // Verificar capacidade de pagamento
-            const rendaConsiderada = banco.rendaBruta ? dados.renda : dados.renda * 0.85;
-            const capacidadeMax = rendaConsiderada * 0.30;
-            const comprometimento = (parcela / rendaConsiderada) * 100;
-            const aprovado = parcela <= capacidadeMax;
-            
+            if (prestacao > maxPrestacao) {
+                return {
+                    banco: banco.nome,
+                    aprovado: false,
+                    motivo: `Renda insuficiente. Prestação seria R$ ${formatarMoeda(prestacao)}, máximo permitido: R$ ${formatarMoeda(maxPrestacao)}`,
+                    prestacao: prestacao,
+                    maxPrestacao: maxPrestacao,
+                    mcmv: elegibilidadeMcmv.elegivel,
+                    subsidio: subsidio
+                };
+            }
+
+            // Calcular totais
+            const totalPago = prestacao * prazoMeses + valorEntrada;
+            const jurosTotal = totalPago - valorImovel;
+
             return {
-                bancoKey,
                 banco: banco.nome,
-                taxa: banco.taxa,
-                ltv,
-                valorImovel: dados.valorImovel,
-                valorFinanciado,
-                entradaNecessaria,
-                parcela,
-                comprometimento: comprometimento.toFixed(1),
-                capacidadeMax,
-                sistema: dados.sistema || 'sac',
-                aprovado,
-                jurosTotal: (parcela * prazo) - valorFinanciado,
-                valorTotal: parcela * prazo
+                aprovado: true,
+                valorImovel: valorImovel,
+                valorEntrada: valorEntrada,
+                valorFinanciar: valorFinanciar,
+                prestacao: prestacao,
+                prazoAnos: 30,
+                taxa: taxa,
+                totalPago: totalPago,
+                jurosTotal: jurosTotal,
+                sistema: sistemaAtual,
+                mcmv: elegibilidadeMcmv.elegivel,
+                subsidio: subsidio,
+                percentualRenda: (prestacao / rendaFamiliar) * 100
             };
         }
 
-        // Exibir resultado único
-        function exibirResultadoUnico(resultado, dados) {
-            const container = document.getElementById('resultsContainer');
+        function verificarMCMV(bancoCodigo, valorImovel, rendaFamiliar) {
+            const banco = bancosConfig[bancoCodigo];
             
-            if (!resultado.aprovado) {
-                container.innerHTML = `
-                    <div class="result-card">
-                        <div class="result-header">
-                            <span>❌</span>
-                            <span>Não Aprovado - ${resultado.banco || dados.banco}</span>
-                        </div>
-                        <div class="alert alert-danger">
-                            <span>❌</span>
-                            <div><strong>Motivo:</strong> ${resultado.motivo}</div>
-                        </div>
-                    </div>
-                `;
-                return;
+            if (!banco.mcmv) {
+                return { elegivel: false, motivo: 'Banco não oferece MCMV' };
             }
-            
-            const statusIcon = resultado.aprovado ? '✅' : '❌';
-            const statusText = resultado.aprovado ? 'APROVADO' : 'REPROVADO';
-            
-            container.innerHTML = `
-                <div class="result-card">
-                    <div class="result-header">
-                        <span>${statusIcon}</span>
-                        <span>${statusText} - ${resultado.banco}</span>
-                    </div>
-                    
-                    <div class="result-grid">
-                        <div class="result-item">
-                            <div class="result-label">Parcela Mensal</div>
-                            <div class="result-value">${formatMoney(resultado.parcela)}</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Valor Financiado</div>
-                            <div class="result-value">${formatMoney(resultado.valorFinanciado)}</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Entrada Necessária</div>
-                            <div class="result-value">${formatMoney(resultado.entradaNecessaria)}</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Taxa de Juros</div>
-                            <div class="result-value">${resultado.taxa}% a.a.</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">LTV</div>
-                            <div class="result-value">${resultado.ltv}%</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Comprometimento</div>
-                            <div class="result-value">${resultado.comprometimento}%</div>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <span>💡</span>
-                        <div>
-                            <strong>Detalhes:</strong> 
-                            Sistema ${resultado.sistema.toUpperCase()} | 
-                            Prazo 30 anos | 
-                            Total de juros: ${formatMoney(resultado.jurosTotal)}
-                        </div>
-                    </div>
-                </div>
-            `;
+
+            // Limites do MCMV Classe Média (2025)
+            if (rendaFamiliar < 2400 || rendaFamiliar > 8000) {
+                return { elegivel: false, motivo: 'Renda fora da faixa MCMV' };
+            }
+
+            if (valorImovel > 350000) {
+                return { elegivel: false, motivo: 'Valor do imóvel acima do limite MCMV' };
+            }
+
+            return { elegivel: true, motivo: 'Elegível para MCMV' };
         }
 
-        // Exibir comparação de todos os bancos
-        function exibirComparacao(resultados, dados) {
-            const container = document.getElementById('resultsContainer');
-            
-            if (resultados.length === 0) {
-                container.innerHTML = `
-                    <div class="result-card">
-                        <div class="no-results">
-                            <h3>😔 Nenhuma Opção Disponível</h3>
-                            <p>Infelizmente, nenhum banco aprovou o financiamento com essas condições.</p>
-                            <p><strong>Sugestões:</strong></p>
-                            <ul style="text-align: left; margin-top: 15px;">
-                                <li>Aumentar o valor da entrada</li>
-                                <li>Considerar um imóvel de menor valor</li>
-                                <li>Aumentar a comprovação de renda</li>
-                                <li>Utilizar o FGTS disponível</li>
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = `
-                <div class="result-card">
-                    <div class="result-header">
-                        <span>🏆</span>
-                        <span>Melhor Opção: ${resultados[0].banco}</span>
-                    </div>
-                    
-                    <div class="result-grid">
-                        <div class="result-item">
-                            <div class="result-label">Menor Parcela</div>
-                            <div class="result-value">${formatMoney(resultados[0].parcela)}</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Valor Financiado</div>
-                            <div class="result-value">${formatMoney(resultados[0].valorFinanciado)}</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Entrada Necessária</div>
-                            <div class="result-value">${formatMoney(resultados[0].entradaNecessaria)}</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Taxa de Juros</div>
-                            <div class="result-value">${resultados[0].taxa}% a.a.</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">LTV</div>
-                            <div class="result-value">${resultados[0].ltv}%</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Economia vs 2ª Opção</div>
-                            <div class="result-value">
-                                ${resultados[1] ? formatMoney(resultados[1].parcela - resultados[0].parcela) + '/mês' : 'N/A'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="result-card">
-                    <div class="comparison-section">
-                        <div class="result-header">
-                            <span>📊</span>
-                            <span>Comparação Completa (${resultados.length} opções aprovadas)</span>
-                        </div>
-                        
-                        <div class="comparison-grid">
-            `;
-
-            resultados.forEach((resultado, index) => {
-                const isBest = index === 0;
-                html += `
-                    <div class="comparison-item ${isBest ? 'best' : ''}">
-                        <div class="comparison-header">
-                            <div>
-                                <div class="banco-info">${resultado.banco}</div>
-                                <div class="taxa-info">${resultado.taxa}% a.a. + TR</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div class="banco-info">${formatMoney(resultado.parcela)}</div>
-                                <div class="taxa-info">por mês</div>
-                            </div>
-                        </div>
-                        
-                        <div class="comparison-details">
-                            <div class="detail-item">
-                                <div class="detail-label">LTV</div>
-                                <div class="detail-value">${resultado.ltv}%</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Entrada</div>
-                                <div class="detail-value">${formatMoney(resultado.entradaNecessaria)}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Financiado</div>
-                                <div class="detail-value">${formatMoney(resultado.valorFinanciado)}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Comprometimento</div>
-                                <div class="detail-value">${resultado.comprometimento}%</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Total Juros</div>
-                                <div class="detail-value">${formatMoney(resultado.jurosTotal)}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">Sistema</div>
-                                <div class="detail-value">${resultado.sistema.toUpperCase()}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="result-card">
-                    <div class="result-header">
-                        <span>💡</span>
-                        <span>Dicas Personalizadas</span>
-                    </div>
-                    ${gerarDicas(resultados, dados)}
-                </div>
-            `;
-
-            container.innerHTML = html;
+        function calcularSAC(valor, taxaMensal, prazoMeses) {
+            const amortizacao = valor / prazoMeses;
+            const jurosPrimeiraParcela = valor * taxaMensal;
+            return amortizacao + jurosPrimeiraParcela; // Primeira parcela (maior)
         }
 
-        // Gerar dicas personalizadas
-        function gerarDicas(resultados, dados) {
-            const melhor = resultados[0];
-            let dicas = [];
-
-            // Dica sobre a melhor opção
-            if (melhor.bancoKey === 'sicredi' || melhor.bancoKey === 'sicoob') {
-                dicas.push('🤝 Cooperativas de crédito oferecem as melhores taxas! Para se associar, procure uma agência na sua região.');
-            }
-
-            // Dica sobre LTV
-            if (melhor.ltv >= 90) {
-                dicas.push('🎯 Excelente! Você conseguiu financiar 90% do imóvel, precisando de pouca entrada.');
-            } else if (melhor.ltv <= 70) {
-                dicas.push('💰 Entrada maior reduz risco e pode resultar em melhores condições no futuro.');
-            }
-
-            // Dica sobre economia
-            if (resultados.length > 1) {
-                const economia = (resultados[1].parcela - melhor.parcela) * 360;
-                dicas.push(`💸 Escolhendo ${melhor.banco}, você economiza ${formatMoney(economia)} em 30 anos comparado ao ${resultados[1].banco}.`);
-            }
-
-            // Dica sobre comprometimento
-            if (parseFloat(melhor.comprometimento) < 20) {
-                dicas.push('✅ Comprometimento baixo da renda! Você terá folga no orçamento para imprevistos.');
-            } else if (parseFloat(melhor.comprometimento) > 25) {
-                dicas.push('⚠️ Comprometimento alto da renda. Considere aumentar a entrada para reduzir a parcela.');
-            }
-
-            // Dica sobre tipo de imóvel
-            if (dados.tipoImovel === 'novo') {
-                dicas.push('🏗️ Imóveis novos geralmente têm melhores condições de financiamento e isenções fiscais.');
-            }
-
-            // Dica sobre FGTS
-            if (dados.fgts > 0) {
-                dicas.push('🏦 Usando FGTS você reduz a entrada necessária e pode negociar melhores condições.');
-            } else {
-                dicas.push('💡 Se tiver FGTS disponível, pode usar para entrada, redução de parcelas ou amortização.');
-            }
-
-            return dicas.map(dica => `
-                <div class="alert alert-info">
-                    <span>💡</span>
-                    <div>${dica}</div>
-                </div>
-            `).join('');
-        }
-
-        // Mostrar erro
-        function mostrarErro(mensagem) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
-                <div class="result-card">
-                    <div class="alert alert-danger">
-                        <span>❌</span>
-                        <div><strong>Erro:</strong> ${mensagem}</div>
-                    </div>
-                </div>
-            `;
-            container.style.display = 'block';
-        }
-
-        // Configurar event listeners
-        function setupEventListeners() {
-            // Inputs de moeda
-            setupMoneyInputs();
-            
-            // Tipo de imóvel
-            setupTipoImovel();
-            
-            // Modo de simulação
-            setupModoSimulacao();
-            
-            // Selects específicos
-            document.getElementById('sistema').addEventListener('change', () => {
-                setTimeout(validarFormulario, 100);
-            });
-            document.getElementById('itauSegmento').addEventListener('change', () => {
-                setTimeout(validarFormulario, 100);
-            });
-            
-            // Form submit
-            document.getElementById('calculatorForm').addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('📝 Formulário submetido');
-                calcularFinanciamento();
-            });
-        }
-
-        // Inicializar
-        function init() {
-            console.log('🎯 Inicializando calculadora aprimorada...');
-            setupEventListeners();
-            validarFormulario();
-            console.log('✅ Calculadora pronta!');
-        }
-
-        // Iniciar quando página carregar
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+        function calcularPRICE(valor, taxaMensal, prazoMeses) {
+            return valor * (taxaMensal
