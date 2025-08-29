@@ -124,7 +124,7 @@
         }
 
         .slider-container {
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         .slider {
@@ -135,6 +135,7 @@
             outline: none;
             opacity: 0.7;
             transition: opacity 0.2s;
+            -webkit-appearance: none;
         }
 
         .slider:hover {
@@ -142,12 +143,21 @@
         }
 
         .slider::-webkit-slider-thumb {
-            appearance: none;
+            -webkit-appearance: none;
             width: 20px;
             height: 20px;
             border-radius: 50%;
             background: #4CAF50;
             cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
         }
 
         .progress-bar {
@@ -164,6 +174,7 @@
             background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573);
             transition: all 0.3s ease;
             border-radius: 4px;
+            width: 0%;
         }
 
         .banks-section {
@@ -203,6 +214,7 @@
         .bank-option input[type="checkbox"] {
             position: absolute;
             opacity: 0;
+            pointer-events: none;
         }
 
         .bank-name {
@@ -226,7 +238,7 @@
 
         .system-toggle button {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: none;
             background: transparent;
             border-radius: 20px;
@@ -238,6 +250,7 @@
         .system-toggle button.active {
             background: #4CAF50;
             color: white;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
         }
 
         .calculate-btn {
@@ -339,6 +352,12 @@
             border: 1px solid #ffeaa7;
         }
 
+        .alert-info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #bee5eb;
+        }
+
         .comparator {
             margin-top: 30px;
             background: white;
@@ -414,7 +433,7 @@
                     <div class="input-wrapper">
                         <input type="number" id="valorImovel" placeholder="Ex: 500000" min="0" step="1000">
                         <div class="slider-container">
-                            <input type="range" class="slider" id="sliderImovel" min="100000" max="2000000" step="10000">
+                            <input type="range" class="slider" id="sliderImovel" min="100000" max="2000000" step="10000" value="500000">
                         </div>
                     </div>
                 </div>
@@ -427,7 +446,7 @@
                     <div class="input-wrapper">
                         <input type="number" id="valorEntrada" placeholder="Ex: 100000" min="0" step="1000">
                         <div class="slider-container">
-                            <input type="range" class="slider" id="sliderEntrada" min="0" max="500000" step="5000">
+                            <input type="range" class="slider" id="sliderEntrada" min="0" max="500000" step="5000" value="100000">
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill" id="progressEntrada"></div>
@@ -444,7 +463,7 @@
                     <div class="input-wrapper">
                         <input type="number" id="rendaFamiliar" placeholder="Ex: 12000" min="0" step="100">
                         <div class="slider-container">
-                            <input type="range" class="slider" id="sliderRenda" min="1000" max="50000" step="500">
+                            <input type="range" class="slider" id="sliderRenda" min="1000" max="50000" step="500" value="12000">
                         </div>
                     </div>
                 </div>
@@ -528,7 +547,7 @@
                     </div>
                 </div>
 
-                <button class="calculate-btn" onclick="calcularFinanciamento()">
+                <button class="calculate-btn" id="calcularBtn">
                     📊 Calcular Financiamento
                 </button>
             </div>
@@ -538,7 +557,7 @@
                 <div id="alertsContainer"></div>
                 <div class="results-grid" id="resultsGrid"></div>
                 
-                <div class="comparator" id="comparator">
+                <div class="comparator hidden" id="comparator">
                     <div class="comparator-header">
                         🔍 Comparativo Detalhado
                     </div>
@@ -599,10 +618,17 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, iniciando setup...');
+            
             // Garantir que todos os checkboxes iniciem desmarcados
             document.querySelectorAll('input[type="checkbox"][name="banco"]').forEach(cb => {
                 cb.checked = false;
             });
+
+            // Configurar valores iniciais
+            document.getElementById('valorImovel').value = 500000;
+            document.getElementById('valorEntrada').value = 100000;
+            document.getElementById('rendaFamiliar').value = 12000;
 
             // Configurar sliders
             setupSliders();
@@ -612,9 +638,19 @@
             
             // Configurar sistema de amortização
             setupSystemToggle();
+
+            // Configurar botão de cálculo
+            document.getElementById('calcularBtn').addEventListener('click', calcularFinanciamento);
+
+            // Atualizar progresso inicial
+            updateProgress();
+            
+            console.log('Setup concluído');
         });
 
         function setupSliders() {
+            console.log('Configurando sliders...');
+            
             const valorImovel = document.getElementById('valorImovel');
             const sliderImovel = document.getElementById('sliderImovel');
             const valorEntrada = document.getElementById('valorEntrada');
@@ -622,7 +658,7 @@
             const rendaFamiliar = document.getElementById('rendaFamiliar');
             const sliderRenda = document.getElementById('sliderRenda');
 
-            // Sincronizar slider com input
+            // Sincronizar input do imóvel com slider
             valorImovel.addEventListener('input', function() {
                 sliderImovel.value = this.value;
                 updateProgress();
@@ -635,6 +671,7 @@
                 updateSliderEntradaMax();
             });
 
+            // Sincronizar input da entrada com slider
             valorEntrada.addEventListener('input', function() {
                 sliderEntrada.value = this.value;
                 updateProgress();
@@ -645,6 +682,7 @@
                 updateProgress();
             });
 
+            // Sincronizar input da renda com slider
             rendaFamiliar.addEventListener('input', function() {
                 sliderRenda.value = this.value;
             });
@@ -684,38 +722,62 @@
         }
 
         function setupBankSelection() {
+            console.log('Configurando seleção de bancos...');
+            
             document.querySelectorAll('.bank-option').forEach(option => {
-                option.addEventListener('click', function() {
+                option.addEventListener('click', function(e) {
+                    // Evitar duplo clique
+                    if (e.target.type === 'checkbox') return;
+                    
                     const checkbox = this.querySelector('input[type="checkbox"]');
                     checkbox.checked = !checkbox.checked;
                     
                     if (checkbox.checked) {
                         this.classList.add('selected');
+                        console.log('Banco selecionado:', checkbox.value);
                     } else {
                         this.classList.remove('selected');
+                        console.log('Banco desmarcado:', checkbox.value);
                     }
                 });
             });
         }
 
         function setupSystemToggle() {
+            console.log('Configurando toggle de sistema...');
+            
             document.querySelectorAll('.system-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.system-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     sistemaAtual = this.dataset.system;
+                    console.log('Sistema alterado para:', sistemaAtual);
                 });
             });
         }
 
         function calcularFinanciamento() {
+            console.log('Iniciando cálculo...');
+            
             const valorImovel = parseFloat(document.getElementById('valorImovel').value);
             const valorEntrada = parseFloat(document.getElementById('valorEntrada').value);
             const rendaFamiliar = parseFloat(document.getElementById('rendaFamiliar').value);
             
+            console.log('Valores:', { valorImovel, valorEntrada, rendaFamiliar, sistemaAtual });
+            
             // Validações básicas
-            if (!valorImovel || !valorEntrada || !rendaFamiliar) {
-                showAlert('Preencha todos os campos obrigatórios.', 'danger');
+            if (!valorImovel || valorImovel <= 0) {
+                showAlert('Informe o valor do imóvel.', 'danger');
+                return;
+            }
+
+            if (!valorEntrada || valorEntrada < 0) {
+                showAlert('Informe o valor da entrada.', 'danger');
+                return;
+            }
+
+            if (!rendaFamiliar || rendaFamiliar <= 0) {
+                showAlert('Informe a renda familiar.', 'danger');
                 return;
             }
 
@@ -728,6 +790,8 @@
             const bancosSelecionados = Array.from(document.querySelectorAll('input[name="banco"]:checked'))
                 .map(cb => cb.value);
 
+            console.log('Bancos selecionados:', bancosSelecionados);
+
             if (bancosSelecionados.length === 0) {
                 showAlert('Selecione pelo menos um banco para simular.', 'warning');
                 return;
@@ -736,9 +800,11 @@
             // Calcular para cada banco
             const resultados = [];
             bancosSelecionados.forEach(bancoCodigo => {
+                console.log('Calculando para banco:', bancoCodigo);
                 const resultado = calcularBanco(bancoCodigo, valorImovel, valorEntrada, rendaFamiliar);
                 if (resultado) {
                     resultados.push(resultado);
+                    console.log('Resultado:', resultado);
                 }
             });
 
@@ -750,6 +816,8 @@
             const banco = bancosConfig[bancoCodigo];
             let valorFinanciar = valorImovel - valorEntrada;
             
+            console.log(`Calculando ${banco.nome}: Valor a financiar inicial: ${valorFinanciar}`);
+            
             // Verificar se é elegível para MCMV
             const elegibilidadeMcmv = verificarMCMV(bancoCodigo, valorImovel, rendaFamiliar);
             
@@ -759,19 +827,22 @@
             if (elegibilidadeMcmv.elegivel) {
                 taxa = banco.taxaMcmv || banco.taxa;
                 subsidio = banco.subsidioMcmv || 0;
-                valorFinanciar -= subsidio;
+                valorFinanciar = Math.max(0, valorFinanciar - subsidio);
+                console.log(`MCMV elegível: Taxa: ${taxa}, Subsídio: ${subsidio}, Valor final: ${valorFinanciar}`);
             }
 
             // Verificar percentual máximo de financiamento
             const percentualFinanciamento = (valorFinanciar / valorImovel) * 100;
             const maxPermitido = elegibilidadeMcmv.elegivel ? 90 : banco.maxFinanciamento;
             
+            console.log(`Percentual financiamento: ${percentualFinanciamento.toFixed(1)}%, Máximo: ${maxPermitido}%`);
+            
             if (percentualFinanciamento > maxPermitido) {
                 const entradaMinima = valorImovel * (1 - maxPermitido / 100);
                 return {
                     banco: banco.nome,
                     aprovado: false,
-                    motivo: `Entrada insuficiente. Necessário pelo menos R$ ${formatarMoeda(entradaMinima)}`,
+                    motivo: `Entrada insuficiente. Necessário pelo menos R$ ${formatarMoeda(entradaMinima)} (${maxPermitido}% máx. financiamento)`,
                     entradaMinima: entradaMinima,
                     mcmv: elegibilidadeMcmv.elegivel,
                     subsidio: subsidio
@@ -789,6 +860,8 @@
                 prestacao = calcularPRICE(valorFinanciar, taxaMensal, prazoMeses);
             }
 
+            console.log(`Prestação ${sistemaAtual}: ${formatarMoeda(prestacao)}`);
+
             // Verificar capacidade de pagamento (30% da renda)
             const maxPrestacao = rendaFamiliar * 0.3;
             
@@ -796,60 +869,3 @@
                 return {
                     banco: banco.nome,
                     aprovado: false,
-                    motivo: `Renda insuficiente. Prestação seria R$ ${formatarMoeda(prestacao)}, máximo permitido: R$ ${formatarMoeda(maxPrestacao)}`,
-                    prestacao: prestacao,
-                    maxPrestacao: maxPrestacao,
-                    mcmv: elegibilidadeMcmv.elegivel,
-                    subsidio: subsidio
-                };
-            }
-
-            // Calcular totais
-            const totalPago = prestacao * prazoMeses + valorEntrada;
-            const jurosTotal = totalPago - valorImovel;
-
-            return {
-                banco: banco.nome,
-                aprovado: true,
-                valorImovel: valorImovel,
-                valorEntrada: valorEntrada,
-                valorFinanciar: valorFinanciar,
-                prestacao: prestacao,
-                prazoAnos: 30,
-                taxa: taxa,
-                totalPago: totalPago,
-                jurosTotal: jurosTotal,
-                sistema: sistemaAtual,
-                mcmv: elegibilidadeMcmv.elegivel,
-                subsidio: subsidio,
-                percentualRenda: (prestacao / rendaFamiliar) * 100
-            };
-        }
-
-        function verificarMCMV(bancoCodigo, valorImovel, rendaFamiliar) {
-            const banco = bancosConfig[bancoCodigo];
-            
-            if (!banco.mcmv) {
-                return { elegivel: false, motivo: 'Banco não oferece MCMV' };
-            }
-
-            // Limites do MCMV Classe Média (2025)
-            if (rendaFamiliar < 2400 || rendaFamiliar > 8000) {
-                return { elegivel: false, motivo: 'Renda fora da faixa MCMV' };
-            }
-
-            if (valorImovel > 350000) {
-                return { elegivel: false, motivo: 'Valor do imóvel acima do limite MCMV' };
-            }
-
-            return { elegivel: true, motivo: 'Elegível para MCMV' };
-        }
-
-        function calcularSAC(valor, taxaMensal, prazoMeses) {
-            const amortizacao = valor / prazoMeses;
-            const jurosPrimeiraParcela = valor * taxaMensal;
-            return amortizacao + jurosPrimeiraParcela; // Primeira parcela (maior)
-        }
-
-        function calcularPRICE(valor, taxaMensal, prazoMeses) {
-            return valor * (taxaMensal
