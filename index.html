@@ -945,7 +945,61 @@
                     if (dados.modo === 'all') {
                         // Calcular todos os bancos
                         console.log('🔄 Modo: Todos os bancos');
-                        resultados = calcularTodosBancos(dados);
+                        
+                        Object.keys(bancos).forEach(bancoKey => {
+                            try {
+                                console.log(`🏛️ Testando ${bancoKey}...`);
+                                
+                                // Para cada banco, testar diferentes configurações
+                                if (bancoKey === 'caixa') {
+                                    // Testar SAC e Price para Caixa
+                                    ['sac', 'price'].forEach(sistema => {
+                                        const dadosTemp = { ...dados, sistema, banco: bancoKey };
+                                        const resultado = calcularBanco(bancoKey, dadosTemp);
+                                        if (resultado.aprovado) {
+                                            resultado.sistema = sistema;
+                                            resultado.identificador = `${bancoKey}_${sistema}`;
+                                            resultado.banco = `${resultado.banco} (${sistema.toUpperCase()})`;
+                                            resultados.push(resultado);
+                                            console.log(`✅ ${bancoKey} ${sistema.toUpperCase()} aprovado`);
+                                        } else {
+                                            console.log(`❌ ${bancoKey} ${sistema.toUpperCase()}: ${resultado.motivo}`);
+                                        }
+                                    });
+                                } else if (bancoKey === 'itau') {
+                                    // Testar melhor segmento do Itaú baseado na renda
+                                    let melhorSegmento = 'agencias';
+                                    if (dados.renda >= 7000) {
+                                        const segmentos = ['agencias', 'personnalite', 'uniclass', 'repasse'];
+                                        for (let segmento of segmentos) {
+                                            const dadosTemp = { ...dados, itauSegmento: segmento, banco: bancoKey };
+                                            const resultado = calcularBanco(bancoKey, dadosTemp);
+                                            if (resultado.aprovado) {
+                                                resultado.segmento = segmento;
+                                                resultado.identificador = `${bancoKey}_${segmento}`;
+                                                resultado.banco = `${resultado.banco} (${segmento})`;
+                                                resultados.push(resultado);
+                                                console.log(`✅ ${bancoKey} ${segmento} aprovado`);
+                                                break; // Usar apenas o primeiro que aprovar
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // Bancos padrão
+                                    const dadosTemp = { ...dados, banco: bancoKey };
+                                    const resultado = calcularBanco(bancoKey, dadosTemp);
+                                    if (resultado.aprovado) {
+                                        resultado.identificador = bancoKey;
+                                        resultados.push(resultado);
+                                        console.log(`✅ ${bancoKey} aprovado`);
+                                    } else {
+                                        console.log(`❌ ${bancoKey}: ${resultado.motivo}`);
+                                    }
+                                }
+                            } catch (error) {
+                                console.error(`❌ Erro calculando ${bancoKey}:`, error);
+                            }
+                        });
                         
                         if (resultados.length > 0) {
                             // Ordenar por parcela
