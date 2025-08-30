@@ -1,4 +1,121 @@
-<!DOCTYPE html>
+function calcularBanco(bancoCodigo, valorImovel, valorEntrada, rendaFamiliar, prazoMeses, idade) {
+            const banco = bancosConfig[bancoCodigo];
+            let valorFinanciar = valorImovel - valorEntrada;
+            
+            debugLog(`${banco.nome}: Valor inicial a financiar = ${valorFinanciar}`);
+            
+            // Verificar se é elegível para MCMV
+            const elegibilidadeMcmv = verificarMCMV(bancoCodigo, valorImovel, rendaFamiliar);
+            debugLog(`MCMV: ${elegibilidadeMcmv.elegivel ? 'Elegível' : elegibilidadeMcmv.motivo}`);
+            
+            let taxa = banco.taxa;
+            let subsidio = 0;
+            
+            // Ajustar taxa baseado no tipo de imóvel
+            if (tipoImovelAtual === 'usado') {
+                taxa += 0.5; // Imóveis usados têm taxa 0.5% maior
+                debugLog(`Taxa ajustada para imóvel usado: ${taxa}%`);
+            }
+
+            // Verificar benefícios para jovens (até 35 anos)
+            const beneficioJovem = idade <= 35;
+            if (beneficioJovem) {
+                taxa -= 0.3; // Desconto de 0.3% para jovens
+                debugLog(`Desconto jovem aplicado: ${taxa}%`);
+            }
+            
+            if (elegibilidadeMcmv.elegivel) {
+                taxa = banco.taxaMcmv || banco.taxa;
+                subsidio = banco.subsidioMcmv || 0;
+                valorFinanciar = Math.max(0, valorFinanciar - subsidio);
+                debugLog(`MCMV aplicado: Taxa=${taxa}%, Subsídio=${subsidio}, Valor final=${valorFinanciar}`);
+            }
+
+            // Verificar percentual máximo de financiamento baseado no tipo de imóvel
+            let maxFinanciamento = banco.maxFinanciamento;
+            if (tipoImovelAtual === 'usado') {
+                maxFinanciamento = Math.min(maxFinanciamento, 80); // Usado máximo 80%
+            }
+            if (elegibilidadeMcmv.elegivel) {
+                maxFinanciamento = 90; // MCMV permite 90%
+            }
+
+            const percentualFinanciamento = (valorFinanciar / valorImovel) * 100;
+            
+            debugLog(`Percentual financiamento: ${percentualFinanciamento.toFixed(1)}% (Máx: ${maxFinanciamento}%)`);
+            
+            if (percentualFinanciamento > maxFinanciamento) {
+                const entradaMinima = valorImovel * (1 - maxFinanciamento / 100);
+                debugLog(`REPROVADO: Entrada insuficiente. Mínimo: ${entradaMinima}`);
+                return {
+                    banco: banco.nome,
+                    aprovado: false,
+                    motivo: `Entrada insuficiente. Necessário pelo menos ${formatarMoeda(entradaMinima)} (${maxFinanciamento}% máx. financiamento para imóvel ${tipoImovelAtual})`,
+                    entradaMinima: entradaMinima,
+                    mcmv: elegibilidadeMcmv.elegivel,
+                    subsidio: subsidio,
+                    tipoImovel: tipoImovelAtual
+                };
+            }
+
+            // Calcular prestação com o prazo escolhido
+            const taxaMensal = taxa / 100 / 12;
+            
+            let prestacao;
+            if (sistemaAtual === 'SAC') {
+                prestacao = calcularSAC(valorFinanciar, taxaMensal, prazoMeses);
+            } else {
+                prestacao = calcularPRICE(valorFinanciar, taxaMensal, prazoMeses);
+            }
+
+            debugLog(`Prestação ${sistemaAtual}: ${prestacao.toFixed(2)}`);
+
+            // Verificar capacidade de pagamento (30% da renda)
+            const maxPrestacao = rendaFamiliar * 0.3;
+            debugLog(`Capacidade: Prestação=${prestacao.toFixed(2)} vs Máx=${maxPrestacao.toFixed(2)}`);
+            
+            if (prestacao > maxPrestacao) {
+                debugLog(`REPROVADO: Prestação acima da capacidade`);
+                return {
+                    banco: banco.nome,
+                    aprovado: false,
+                    motivo: `Renda insuficiente. Prestação seria ${formatarMoeda(prestacao)}, máximo permitido: ${formatarMoeda(maxPrestacao)} (30% da renda)`,
+                    prestacao: prestacao,
+                    maxPrestacao: maxPrestacao,
+                    mcmv: elegibilidadeMcmv.elegivel,
+                    subsidio: subsidio,
+                    tipoImovel: tipoImovelAtual
+                };
+            }
+
+            // Calcular totais
+            const totalPago = prestacao * prazoMeses + valorEntrada;
+            const jurosTotal = totalPago - valorImovel;
+            const prazoAnos = prazoMeses / 12;
+
+            debugLog(`APROVADO: Prestação=${prestacao.toFixed(2)}, Total=${totalPago.toFixed(2)}`);
+
+            return {
+                banco: banco.nome,
+                aprovado: true,
+                valorImovel: valorImovel,
+                valorEntrada: valorEntrada,
+                valorFinanciar: valorFinanciar,
+                prestacao: prestacao,
+                prazoAnos: prazoAnos,
+                prazoMeses: prazoMeses,
+                taxa: taxa,
+                totalPago: totalPago,
+                jurosTotal: jurosTotal,
+                sistema: sistemaAtual,
+                mcmv: elegibilidadeMcmv.elegivel,
+                subsidio: subsidio,
+                percentualRenda: (prestacao / rendaFamiliar) * 100,
+                tipoImovel: tipoImovelAtual,
+                beneficioJovem: beneficioJovem,
+                idade: idade
+            };
+        }<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -254,6 +371,99 @@
             box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
         }
 
+        .tipo-imovel-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tipo-imovel-btn.active {
+            background: #4CAF50;
+            color: white;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .sistema-explicacao {
+            margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .explicacao-sac,
+        .explicacao-price {
+            display: none;
+        }
+
+        .explicacao-sac.active,
+        .explicacao-price.active {
+            display: block;
+        }
+
+        .explicacao-detalhes h4 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .explicacao-detalhes p {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .vantagens-desvantagens {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .vantagens,
+        .desvantagens {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .desvantagens {
+            border-left-color: #ff6b6b;
+        }
+
+        .vantagens h5,
+        .desvantagens h5 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .vantagens ul,
+        .desvantagens ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .vantagens li,
+        .desvantagens li {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .ideal-para {
+            background: #e8f5e8;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
         .calculate-btn {
             width: 100%;
             background: linear-gradient(135deg, #4CAF50, #45a049);
@@ -495,14 +705,104 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="dataNascimento">
+                        Data de Nascimento
+                        <span class="tooltip" data-tooltip="Necessária para calcular idade e verificar programas especiais para jovens">?</span>
+                    </label>
+                    <input type="date" id="dataNascimento" style="width: 100%; padding: 15px 20px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 1.1rem; background: white;">
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Imóvel</label>
+                    <div class="system-toggle">
+                        <button type="button" class="tipo-imovel-btn active" data-tipo="novo">
+                            Novo <span class="tooltip" data-tooltip="Imóveis novos têm taxas menores e financiamento até 90%">?</span>
+                        </button>
+                        <button type="button" class="tipo-imovel-btn" data-tipo="usado">
+                            Usado <span class="tooltip" data-tooltip="Imóveis usados têm financiamento até 80% do valor">?</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prazoFinanciamento">
+                        Prazo do Financiamento
+                        <span class="tooltip" data-tooltip="Tempo para quitação completa do financiamento">?</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <select id="prazoFinanciamento" style="width: 100%; padding: 15px 20px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 1.1rem; background: white;">
+                            <option value="180">15 anos (180 parcelas)</option>
+                            <option value="240">20 anos (240 parcelas)</option>
+                            <option value="300">25 anos (300 parcelas)</option>
+                            <option value="360" selected>30 anos (360 parcelas)</option>
+                            <option value="420">35 anos (420 parcelas)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label>Sistema de Amortização</label>
                     <div class="system-toggle">
                         <button type="button" class="system-btn active" data-system="SAC">
-                            SAC <span class="tooltip" data-tooltip="Parcelas decrescentes, juros menores no total">?</span>
+                            SAC
                         </button>
                         <button type="button" class="system-btn" data-system="PRICE">
-                            PRICE <span class="tooltip" data-tooltip="Parcelas fixas, mais fácil de planejar">?</span>
+                            PRICE
                         </button>
+                    </div>
+                    <div class="sistema-explicacao" id="explicacaoSistema">
+                        <div class="explicacao-sac active">
+                            <h4>📉 Sistema SAC (Amortização Constante)</h4>
+                            <div class="explicacao-detalhes">
+                                <p><strong>Como funciona:</strong> Parcelas começam altas e diminuem mensalmente.</p>
+                                <p><strong>Amortização:</strong> Valor fixo todo mês, reduzindo o saldo devedor rapidamente.</p>
+                                <p><strong>Juros:</strong> Calculados sobre saldo devedor decrescente.</p>
+                                <div class="vantagens-desvantagens">
+                                    <div class="vantagens">
+                                        <h5>✅ Vantagens:</h5>
+                                        <ul>
+                                            <li>Menor valor total de juros</li>
+                                            <li>Saldo devedor cai rapidamente</li>
+                                            <li>Prestações diminuem com o tempo</li>
+                                        </ul>
+                                    </div>
+                                    <div class="desvantagens">
+                                        <h5>⚠️ Desvantagens:</h5>
+                                        <ul>
+                                            <li>Parcelas iniciais mais altas</li>
+                                            <li>Maior comprometimento inicial da renda</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="ideal-para"><strong>💡 Ideal para:</strong> Quem tem renda estável e quer pagar menos juros no total.</p>
+                            </div>
+                        </div>
+                        <div class="explicacao-price">
+                            <h4>📊 Sistema PRICE (Prestações Fixas)</h4>
+                            <div class="explicacao-detalhes">
+                                <p><strong>Como funciona:</strong> Parcelas fixas durante todo o financiamento.</p>
+                                <p><strong>Amortização:</strong> Começa baixa e aumenta ao longo do tempo.</p>
+                                <p><strong>Juros:</strong> Maior no início, menor no final.</p>
+                                <div class="vantagens-desvantagens">
+                                    <div class="vantagens">
+                                        <h5>✅ Vantagens:</h5>
+                                        <ul>
+                                            <li>Parcelas fixas facilitam planejamento</li>
+                                            <li>Comprometimento inicial menor</li>
+                                            <li>Mais fácil de ser aprovado</li>
+                                        </ul>
+                                    </div>
+                                    <div class="desvantagens">
+                                        <h5>⚠️ Desvantagens:</h5>
+                                        <ul>
+                                            <li>Maior valor total de juros</li>
+                                            <li>Saldo devedor cai lentamente</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="ideal-para"><strong>💡 Ideal para:</strong> Quem prefere previsibilidade e tem orçamento apertado inicialmente.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -647,6 +947,7 @@
         };
 
         let sistemaAtual = 'SAC';
+        let tipoImovelAtual = 'novo';
         let debugMode = false;
 
         function debugLog(message) {
@@ -683,6 +984,11 @@
                 debugLog(`Checkbox ${cb.value} desmarcado: ${!cb.checked}`);
             });
 
+            // Configurar data inicial (30 anos atrás)
+            const hoje = new Date();
+            const dataInicial = new Date(hoje.getFullYear() - 30, hoje.getMonth(), hoje.getDate());
+            document.getElementById('dataNascimento').value = dataInicial.toISOString().split('T')[0];
+
             // Configurar sliders
             setupSliders();
             
@@ -691,6 +997,9 @@
             
             // Configurar sistema de amortização
             setupSystemToggle();
+
+            // Configurar tipo de imóvel
+            setupTipoImovel();
 
             // Configurar botão de cálculo
             document.getElementById('calcularBtn').addEventListener('click', calcularFinanciamento);
@@ -770,20 +1079,50 @@
                 // Remove tudo exceto números
                 valor = valor.replace(/[^\d]/g, '');
                 
-                // Converte para número e formata
-                if (valor) {
-                    const numero = parseFloat(valor);
-                    e.target.value = formatarMoedaBrasil(numero);
-                } else {
+                // Se campo vazio, deixa vazio
+                if (!valor) {
                     e.target.value = '';
+                    return;
+                }
+                
+                // Converte para número e formata
+                const numero = parseInt(valor);
+                e.target.value = formatarMoedaBrasil(numero);
+            });
+
+            // Formatação ao sair do campo
+            input.addEventListener('blur', function(e) {
+                if (!e.target.value) {
+                    e.target.value = '';
+                    return;
+                }
+                
+                const valor = obterValorNumerico(e.target.id);
+                if (valor > 0) {
+                    e.target.value = formatarMoedaBrasil(valor);
                 }
             });
 
-            // Formatar ao sair do campo
-            input.addEventListener('blur', function(e) {
-                const valor = parseFloat(e.target.value.replace(/\./g, '').replace(',', '.')) || 0;
-                if (valor > 0) {
-                    e.target.value = formatarMoedaBrasil(valor);
+            // Permitir seleção completa com Ctrl+A
+            input.addEventListener('keydown', function(e) {
+                // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Delete, Backspace, Tab, Enter, Esc
+                if (e.ctrlKey || e.key === 'Delete' || e.key === 'Backspace' || 
+                    e.key === 'Tab' || e.key === 'Enter' || e.key === 'Escape' ||
+                    e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    return;
+                }
+                
+                // Permitir apenas números
+                if (!/^\d$/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            // Limpar campo ao focar se estiver vazio ou com zero
+            input.addEventListener('focus', function(e) {
+                const valor = obterValorNumerico(e.target.id);
+                if (valor === 0) {
+                    e.target.value = '';
                 }
             });
         }
@@ -799,7 +1138,11 @@
 
         function obterValorNumerico(inputId) {
             const valor = document.getElementById(inputId).value;
-            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+            if (!valor) return 0;
+            
+            // Remove pontos e substitui vírgula por ponto
+            const numeroLimpo = valor.replace(/\./g, '').replace(',', '.');
+            return parseFloat(numeroLimpo) || 0;
         }
 
         function updateSliderEntradaMax() {
@@ -864,9 +1207,50 @@
                     document.querySelectorAll('.system-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     sistemaAtual = this.dataset.system;
+                    
+                    // Atualizar explicação
+                    document.querySelectorAll('.explicacao-sac, .explicacao-price').forEach(exp => {
+                        exp.classList.remove('active');
+                    });
+                    
+                    if (sistemaAtual === 'SAC') {
+                        document.querySelector('.explicacao-sac').classList.add('active');
+                    } else {
+                        document.querySelector('.explicacao-price').classList.add('active');
+                    }
+                    
                     debugLog(`Sistema alterado para: ${sistemaAtual}`);
                 });
             });
+        }
+
+        function setupTipoImovel() {
+            debugLog('Configurando tipo de imóvel...');
+            
+            document.querySelectorAll('.tipo-imovel-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tipo-imovel-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    tipoImovelAtual = this.dataset.tipo;
+                    debugLog(`Tipo de imóvel alterado para: ${tipoImovelAtual}`);
+                });
+            });
+        }
+
+        function calcularIdade() {
+            const dataNascimento = document.getElementById('dataNascimento').value;
+            if (!dataNascimento) return 0;
+            
+            const hoje = new Date();
+            const nascimento = new Date(dataNascimento);
+            let idade = hoje.getFullYear() - nascimento.getFullYear();
+            const mes = hoje.getMonth() - nascimento.getMonth();
+            
+            if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+                idade--;
+            }
+            
+            return idade;
         }
 
         function calcularFinanciamento() {
@@ -875,8 +1259,10 @@
             const valorImovel = obterValorNumerico('valorImovel');
             const valorEntrada = obterValorNumerico('valorEntrada');
             const rendaFamiliar = obterValorNumerico('rendaFamiliar');
+            const prazoMeses = parseInt(document.getElementById('prazoFinanciamento').value);
+            const idade = calcularIdade();
             
-            debugLog(`Dados informados: Imóvel=${valorImovel}, Entrada=${valorEntrada}, Renda=${rendaFamiliar}, Sistema=${sistemaAtual}`);
+            debugLog(`Dados: Imóvel=${valorImovel}, Entrada=${valorEntrada}, Renda=${rendaFamiliar}, Prazo=${prazoMeses}meses, Sistema=${sistemaAtual}, Tipo=${tipoImovelAtual}, Idade=${idade}`);
             
             // Validações básicas
             if (!valorImovel || valorImovel <= 0) {
@@ -894,6 +1280,21 @@
             if (!rendaFamiliar || rendaFamiliar <= 0) {
                 showAlert('❌ Informe a renda familiar.', 'danger');
                 debugLog('ERRO: Renda familiar inválida');
+                return;
+            }
+
+            if (!document.getElementById('dataNascimento').value) {
+                showAlert('❌ Informe a data de nascimento.', 'danger');
+                debugLog('ERRO: Data de nascimento não informada');
+                return;
+            }
+
+            // Validação de idade + prazo
+            const idadeFinalFinanciamento = idade + (prazoMeses / 12);
+            if (idadeFinalFinanciamento > 80) {
+                const prazoMaximo = (80 - idade) * 12;
+                showAlert(`⚠️ Prazo muito longo! Com sua idade (${idade} anos), o prazo máximo é ${Math.floor(prazoMaximo)} meses.`, 'warning');
+                debugLog(`ERRO: Idade final seria ${idadeFinalFinanciamento} anos`);
                 return;
             }
 
@@ -922,7 +1323,7 @@
             const resultados = [];
             bancosSelecionados.forEach(bancoCodigo => {
                 debugLog(`--- Calculando para ${bancoCodigo.toUpperCase()} ---`);
-                const resultado = calcularBanco(bancoCodigo, valorImovel, valorEntrada, rendaFamiliar);
+                const resultado = calcularBanco(bancoCodigo, valorImovel, valorEntrada, rendaFamiliar, prazoMeses, idade);
                 if (resultado) {
                     resultados.push(resultado);
                     debugLog(`Resultado ${bancoCodigo}: ${resultado.aprovado ? 'APROVADO' : 'REPROVADO'} - ${resultado.motivo || 'OK'}`);
@@ -1326,6 +1727,14 @@
             document.getElementById('valorEntrada').value = '100.000,00';
             document.getElementById('rendaFamiliar').value = '12.000,00';
             
+            // Resetar data de nascimento para 30 anos atrás
+            const hoje = new Date();
+            const dataInicial = new Date(hoje.getFullYear() - 30, hoje.getMonth(), hoje.getDate());
+            document.getElementById('dataNascimento').value = dataInicial.toISOString().split('T')[0];
+            
+            // Resetar prazo para 30 anos
+            document.getElementById('prazoFinanciamento').value = '360';
+            
             // Resetar sliders
             document.getElementById('sliderImovel').value = '500000';
             document.getElementById('sliderEntrada').value = '100000';
@@ -1345,6 +1754,19 @@
             });
             document.querySelector('.system-btn[data-system="SAC"]').classList.add('active');
             sistemaAtual = 'SAC';
+            
+            // Resetar tipo de imóvel para novo
+            document.querySelectorAll('.tipo-imovel-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.tipo-imovel-btn[data-tipo="novo"]').classList.add('active');
+            tipoImovelAtual = 'novo';
+            
+            // Resetar explicações
+            document.querySelectorAll('.explicacao-sac, .explicacao-price').forEach(exp => {
+                exp.classList.remove('active');
+            });
+            document.querySelector('.explicacao-sac').classList.add('active');
             
             // Ocultar resultados
             document.getElementById('resultsSection').classList.add('hidden');
