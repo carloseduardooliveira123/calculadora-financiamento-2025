@@ -538,18 +538,14 @@
         let sistemaAtual = 'SAC';
         let tipoImovelAtual = 'novo';
 
-        // Funções auxiliares
-        function formatarNumero(numeroString) {
-            if (!numeroString) return '';
-            const numero = parseInt(numeroString);
-            if (isNaN(numero) || numero === 0) return '';
-            return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
+        // Funções auxiliares - SIMPLIFICADAS E TESTADAS
         function obterValorNumerico(inputId) {
             const valor = document.getElementById(inputId).value;
             if (!valor) return 0;
-            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+            
+            // Remove pontos e vírgulas, converte para número
+            const numeroLimpo = valor.replace(/\./g, '').replace(/,.*/, '');
+            return parseInt(numeroLimpo) || 0;
         }
 
         function formatarMoeda(valor) {
@@ -565,22 +561,60 @@
             setTimeout(() => { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 10000);
         }
 
-        // Setup de campos
+        // Setup de campos - VERSÃO ULTRA SIMPLES E FUNCIONAL
         function setupCurrencyInput(input) {
-            let digitando = false;
+            // Remove listener antigo se existir
+            input.removeEventListener('input', input._formatHandler);
             
-            input.addEventListener('input', function(e) {
-                if (digitando) return;
-                digitando = true;
-                let valor = e.target.value.replace(/[^\d]/g, '');
-                e.target.value = valor ? formatarNumero(valor) : '';
-                digitando = false;
-            });
-
+            // Criar novo handler simples
+            input._formatHandler = function(e) {
+                // Obter apenas números do valor digitado
+                let apenasNumeros = e.target.value.replace(/[^\d]/g, '');
+                
+                // Se não há números, limpar campo
+                if (!apenasNumeros) {
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Converter para número e formatar
+                let numero = parseInt(apenasNumeros);
+                if (numero) {
+                    e.target.value = numero.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
+            };
+            
+            // Adicionar listener
+            input.addEventListener('input', input._formatHandler);
+            
+            // Permitir teclas especiais
             input.addEventListener('keydown', function(e) {
-                const permitidas = ['Backspace', 'Delete', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
-                if (permitidas.includes(e.key) || e.ctrlKey || e.metaKey) return;
-                if (!/^\d$/.test(e.key)) e.preventDefault();
+                // Lista de teclas sempre permitidas
+                const permitidas = [
+                    'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
+                    'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                    'Home', 'End'
+                ];
+                
+                // Permitir teclas especiais e Ctrl+qualquercoisa
+                if (permitidas.includes(e.key) || e.ctrlKey || e.metaKey) {
+                    return; // Permitir
+                }
+                
+                // Permitir apenas dígitos 0-9
+                if (!/^[0-9]$/.test(e.key)) {
+                    e.preventDefault(); // Bloquear
+                }
+            });
+            
+            // Limpar campo quando focar se for zero
+            input.addEventListener('focus', function(e) {
+                if (e.target.value === '0,00') {
+                    e.target.value = '';
+                }
             });
         }
 
@@ -855,10 +889,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Calculadora carregada e funcionando!');
             
-            // Valores iniciais
-            document.getElementById('valorImovel').value = formatarNumero('500000');
-            document.getElementById('valorEntrada').value = formatarNumero('100000');
-            document.getElementById('rendaFamiliar').value = formatarNumero('12000');
+            // Valores iniciais com formatação simples
+            document.getElementById('valorImovel').value = '500.000,00';
+            document.getElementById('valorEntrada').value = '100.000,00';
+            document.getElementById('rendaFamiliar').value = '12.000,00';
             
             // Data inicial (30 anos atrás)
             const hoje = new Date();
@@ -891,7 +925,11 @@
             });
 
             sliderImovel.addEventListener('input', function() {
-                valorImovel.value = formatarNumero(this.value);
+                const numero = parseInt(this.value);
+                valorImovel.value = numero.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
                 sliderEntrada.max = this.value;
                 updateProgress();
             });
@@ -903,17 +941,20 @@
             });
 
             sliderEntrada.addEventListener('input', function() {
-                valorEntrada.value = formatarNumero(this.value);
+                const numero = parseInt(this.value);
+                valorEntrada.value = numero.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
                 updateProgress();
             });
 
-            rendaFamiliar.addEventListener('input', function() {
-                const valor = obterValorNumerico('rendaFamiliar');
-                sliderRenda.value = valor;
-            });
-
             sliderRenda.addEventListener('input', function() {
-                rendaFamiliar.value = formatarNumero(this.value);
+                const numero = parseInt(this.value);
+                rendaFamiliar.value = numero.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
             });
 
             // Setup dos bancos
