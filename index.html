@@ -561,59 +561,122 @@
             setTimeout(() => { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 10000);
         }
 
-        // Setup de campos - VERSÃO ULTRA SIMPLES E FUNCIONAL
+        // Setup de campos - VERSÃO DEFINITIVA E FUNCIONAL
         function setupCurrencyInput(input) {
-            // Remove listener antigo se existir
-            input.removeEventListener('input', input._formatHandler);
+            // Armazenar apenas números (sem formatação)
+            let valorNumerico = '';
             
-            // Criar novo handler simples
-            input._formatHandler = function(e) {
-                // Obter apenas números do valor digitado
-                let apenasNumeros = e.target.value.replace(/[^\d]/g, '');
+            input.addEventListener('input', function(e) {
+                // Pegar o valor atual do campo
+                let valorAtual = e.target.value;
                 
-                // Se não há números, limpar campo
-                if (!apenasNumeros) {
+                // Extrair APENAS os dígitos
+                let digitos = valorAtual.replace(/[^\d]/g, '');
+                
+                // Se não tem dígitos, limpar tudo
+                if (!digitos) {
+                    valorNumerico = '';
                     e.target.value = '';
                     return;
                 }
                 
-                // Converter para número e formatar
-                let numero = parseInt(apenasNumeros);
-                if (numero) {
+                // Guardar os números
+                valorNumerico = digitos;
+                
+                // Converter para número inteiro
+                let numero = parseInt(digitos);
+                
+                // Formatar e mostrar
+                e.target.value = numero.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                console.log(`Debug: Digitou "${valorAtual}" → Extraiu "${digitos}" → Número ${numero} → Mostrou "${e.target.value}"`);
+            });
+            
+            // Controlar teclas permitidas
+            input.addEventListener('keydown', function(e) {
+                console.log(`Tecla pressionada: "${e.key}"`);
+                
+                // BACKSPACE - remove último dígito
+                if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    valorNumerico = valorNumerico.slice(0, -1);
+                    
+                    if (!valorNumerico) {
+                        e.target.value = '';
+                    } else {
+                        let numero = parseInt(valorNumerico);
+                        e.target.value = numero.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                    console.log(`Backspace: valorNumerico="${valorNumerico}" → Campo="${e.target.value}"`);
+                    return;
+                }
+                
+                // DELETE - limpa tudo
+                if (e.key === 'Delete') {
+                    e.preventDefault();
+                    valorNumerico = '';
+                    e.target.value = '';
+                    console.log('Delete: Campo limpo');
+                    return;
+                }
+                
+                // ESC - limpa tudo  
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    valorNumerico = '';
+                    e.target.value = '';
+                    console.log('Escape: Campo limpo');
+                    return;
+                }
+                
+                // Teclas de navegação permitidas
+                if (['Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                    return; // Permite
+                }
+                
+                // Ctrl + qualquer coisa
+                if (e.ctrlKey || e.metaKey) {
+                    return; // Permite copiar, colar, etc
+                }
+                
+                // APENAS números 0-9
+                if (/^[0-9]$/.test(e.key)) {
+                    e.preventDefault();
+                    
+                    // Adicionar o dígito
+                    valorNumerico = valorNumerico + e.key;
+                    let numero = parseInt(valorNumerico);
+                    
                     e.target.value = numero.toLocaleString('pt-BR', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                     });
-                }
-            };
-            
-            // Adicionar listener
-            input.addEventListener('input', input._formatHandler);
-            
-            // Permitir teclas especiais
-            input.addEventListener('keydown', function(e) {
-                // Lista de teclas sempre permitidas
-                const permitidas = [
-                    'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
-                    'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-                    'Home', 'End'
-                ];
-                
-                // Permitir teclas especiais e Ctrl+qualquercoisa
-                if (permitidas.includes(e.key) || e.ctrlKey || e.metaKey) {
-                    return; // Permitir
+                    
+                    console.log(`Dígito ${e.key}: valorNumerico="${valorNumerico}" → Campo="${e.target.value}"`);
+                    return;
                 }
                 
-                // Permitir apenas dígitos 0-9
-                if (!/^[0-9]$/.test(e.key)) {
-                    e.preventDefault(); // Bloquear
-                }
+                // Bloquear tudo o resto
+                e.preventDefault();
+                console.log(`Tecla "${e.key}" bloqueada`);
             });
             
-            // Limpar campo quando focar se for zero
-            input.addEventListener('focus', function(e) {
-                if (e.target.value === '0,00') {
+            // Quando sair do campo, garantir formatação
+            input.addEventListener('blur', function(e) {
+                if (!valorNumerico) {
                     e.target.value = '';
+                } else {
+                    let numero = parseInt(valorNumerico);
+                    e.target.value = numero.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
                 }
             });
         }
@@ -995,6 +1058,11 @@
             updateProgress();
             
             console.log('✅ Inicialização completa - CALCULADORA PRONTA!');
+            console.log('🔥 TESTE A DIGITAÇÃO:');
+            console.log('   - Digite 350 no campo → deve ficar 350,00');
+            console.log('   - Digite 500000 no campo → deve ficar 500.000,00');
+            console.log('   - Pressione ESC → deve limpar o campo');
+            console.log('   - Use Backspace → deve remover dígitos normalmente');
         });
 
         console.log('🚀 Calculadora de Financiamento v4.0 - LIMPA E FUNCIONAL');
