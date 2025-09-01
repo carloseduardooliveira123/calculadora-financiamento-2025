@@ -538,13 +538,13 @@
         let sistemaAtual = 'SAC';
         let tipoImovelAtual = 'novo';
 
-        // Funções auxiliares - SIMPLIFICADAS E TESTADAS
+        // Funções auxiliares - CORRIGIDAS E TESTADAS
         function obterValorNumerico(inputId) {
             const valor = document.getElementById(inputId).value;
             if (!valor) return 0;
             
-            // Remove pontos e vírgulas, converte para número
-            const numeroLimpo = valor.replace(/\./g, '').replace(/,.*/, '');
+            // Remove TUDO exceto números e converte
+            const numeroLimpo = valor.replace(/[^\d]/g, '');
             return parseInt(numeroLimpo) || 0;
         }
 
@@ -557,8 +557,24 @@
             const alert = document.createElement('div');
             alert.className = `alert alert-${type}`;
             alert.innerHTML = message;
+            
+            // Adicionar botão X para fechar manualmente (opcional)
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = 'float: right; background: none; border: none; font-size: 20px; cursor: pointer; margin-left: 10px; opacity: 0.7;';
+            closeBtn.onclick = function() {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            };
+            alert.appendChild(closeBtn);
+            
             container.appendChild(alert);
-            setTimeout(() => { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 10000);
+            
+            // REMOVER O TIMEOUT - alertas ficam permanentes até usuário decidir
+            // setTimeout(() => { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 10000);
+            
+            alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         // Setup de campos - VERSÃO DEFINITIVA E FUNCIONAL
@@ -865,6 +881,10 @@
             });
 
             resultsSection.classList.remove('hidden');
+            
+            // Adicionar botões de ação
+            adicionarBotoesAcao();
+            
             resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
 
