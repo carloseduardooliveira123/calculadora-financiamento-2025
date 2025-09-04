@@ -538,14 +538,18 @@
         let sistemaAtual = 'SAC';
         let tipoImovelAtual = 'novo';
 
-        // Funções auxiliares - CORRIGIDAS E TESTADAS
+        // Funções auxiliares
+        function formatarNumero(numeroString) {
+            if (!numeroString) return '';
+            const numero = parseInt(numeroString);
+            if (isNaN(numero) || numero === 0) return '';
+            return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         function obterValorNumerico(inputId) {
             const valor = document.getElementById(inputId).value;
             if (!valor) return 0;
-            
-            // Remove TUDO exceto números e converte
-            const numeroLimpo = valor.replace(/[^\d]/g, '');
-            return parseInt(numeroLimpo) || 0;
+            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
         }
 
         function formatarMoeda(valor) {
@@ -557,143 +561,26 @@
             const alert = document.createElement('div');
             alert.className = `alert alert-${type}`;
             alert.innerHTML = message;
-            
-            // Adicionar botão X para fechar manualmente (opcional)
-            const closeBtn = document.createElement('button');
-            closeBtn.innerHTML = '×';
-            closeBtn.style.cssText = 'float: right; background: none; border: none; font-size: 20px; cursor: pointer; margin-left: 10px; opacity: 0.7;';
-            closeBtn.onclick = function() {
-                if (alert.parentNode) {
-                    alert.parentNode.removeChild(alert);
-                }
-            };
-            alert.appendChild(closeBtn);
-            
             container.appendChild(alert);
-            
-            // REMOVER O TIMEOUT - alertas ficam permanentes até usuário decidir
-            // setTimeout(() => { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 10000);
-            
-            alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => { if (alert.parentNode) alert.parentNode.removeChild(alert); }, 10000);
         }
 
-        // Setup de campos - VERSÃO DEFINITIVA E FUNCIONAL
+        // Setup de campos
         function setupCurrencyInput(input) {
-            // Armazenar apenas números (sem formatação)
-            let valorNumerico = '';
+            let digitando = false;
             
             input.addEventListener('input', function(e) {
-                // Pegar o valor atual do campo
-                let valorAtual = e.target.value;
-                
-                // Extrair APENAS os dígitos
-                let digitos = valorAtual.replace(/[^\d]/g, '');
-                
-                // Se não tem dígitos, limpar tudo
-                if (!digitos) {
-                    valorNumerico = '';
-                    e.target.value = '';
-                    return;
-                }
-                
-                // Guardar os números
-                valorNumerico = digitos;
-                
-                // Converter para número inteiro
-                let numero = parseInt(digitos);
-                
-                // Formatar e mostrar
-                e.target.value = numero.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-                
-                console.log(`Debug: Digitou "${valorAtual}" → Extraiu "${digitos}" → Número ${numero} → Mostrou "${e.target.value}"`);
+                if (digitando) return;
+                digitando = true;
+                let valor = e.target.value.replace(/[^\d]/g, '');
+                e.target.value = valor ? formatarNumero(valor) : '';
+                digitando = false;
             });
-            
-            // Controlar teclas permitidas
+
             input.addEventListener('keydown', function(e) {
-                console.log(`Tecla pressionada: "${e.key}"`);
-                
-                // BACKSPACE - remove último dígito
-                if (e.key === 'Backspace') {
-                    e.preventDefault();
-                    valorNumerico = valorNumerico.slice(0, -1);
-                    
-                    if (!valorNumerico) {
-                        e.target.value = '';
-                    } else {
-                        let numero = parseInt(valorNumerico);
-                        e.target.value = numero.toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                    }
-                    console.log(`Backspace: valorNumerico="${valorNumerico}" → Campo="${e.target.value}"`);
-                    return;
-                }
-                
-                // DELETE - limpa tudo
-                if (e.key === 'Delete') {
-                    e.preventDefault();
-                    valorNumerico = '';
-                    e.target.value = '';
-                    console.log('Delete: Campo limpo');
-                    return;
-                }
-                
-                // ESC - limpa tudo  
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    valorNumerico = '';
-                    e.target.value = '';
-                    console.log('Escape: Campo limpo');
-                    return;
-                }
-                
-                // Teclas de navegação permitidas
-                if (['Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
-                    return; // Permite
-                }
-                
-                // Ctrl + qualquer coisa
-                if (e.ctrlKey || e.metaKey) {
-                    return; // Permite copiar, colar, etc
-                }
-                
-                // APENAS números 0-9
-                if (/^[0-9]$/.test(e.key)) {
-                    e.preventDefault();
-                    
-                    // Adicionar o dígito
-                    valorNumerico = valorNumerico + e.key;
-                    let numero = parseInt(valorNumerico);
-                    
-                    e.target.value = numero.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                    
-                    console.log(`Dígito ${e.key}: valorNumerico="${valorNumerico}" → Campo="${e.target.value}"`);
-                    return;
-                }
-                
-                // Bloquear tudo o resto
-                e.preventDefault();
-                console.log(`Tecla "${e.key}" bloqueada`);
-            });
-            
-            // Quando sair do campo, garantir formatação
-            input.addEventListener('blur', function(e) {
-                if (!valorNumerico) {
-                    e.target.value = '';
-                } else {
-                    let numero = parseInt(valorNumerico);
-                    e.target.value = numero.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                }
+                const permitidas = ['Backspace', 'Delete', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                if (permitidas.includes(e.key) || e.ctrlKey || e.metaKey) return;
+                if (!/^\d$/.test(e.key)) e.preventDefault();
             });
         }
 
@@ -881,10 +768,6 @@
             });
 
             resultsSection.classList.remove('hidden');
-            
-            // Adicionar botões de ação
-            adicionarBotoesAcao();
-            
             resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -968,14 +851,128 @@
             return card;
         }
 
+        // Adicionar botões de ação
+        function adicionarBotoesAcao() {
+            const resultsSection = document.getElementById('resultsSection');
+            if (!document.getElementById('actionButtons')) {
+                const actionDiv = document.createElement('div');
+                actionDiv.id = 'actionButtons';
+                actionDiv.style.cssText = 'margin-top: 30px; padding-top: 20px; border-top: 2px solid #e9ecef; text-align: center; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;';
+                
+                actionDiv.innerHTML = `
+                    <button onclick="novaSimulacao()" style="background: linear-gradient(135deg, #28a745, #1e7e34); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s ease;">
+                        🔄 Nova Simulação
+                    </button>
+                    <button onclick="window.print()" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s ease;">
+                        🖨️ Imprimir Resultado
+                    </button>
+                    <button onclick="copiarResultados()" style="background: linear-gradient(135deg, #17a2b8, #138496); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s ease;">
+                        📋 Copiar Resumo
+                    </button>
+                    <button onclick="limparResultados()" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.3s ease;">
+                        🗑️ Limpar Resultados
+                    </button>
+                `;
+                
+                resultsSection.appendChild(actionDiv);
+
+                // Adicionar efeitos hover
+                actionDiv.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-2px)';
+                        this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                    });
+                    btn.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = 'none';
+                    });
+                });
+            }
+        }
+
+        function novaSimulacao() {
+            // Resetar todos os campos
+            document.getElementById('valorImovel').value = '500.000,00';
+            document.getElementById('valorEntrada').value = '100.000,00';
+            document.getElementById('rendaFamiliar').value = '12.000,00';
+            
+            // Data inicial (30 anos atrás)
+            const hoje = new Date();
+            const dataInicial = new Date(hoje.getFullYear() - 30, hoje.getMonth(), hoje.getDate());
+            document.getElementById('dataNascimento').value = dataInicial.toISOString().split('T')[0];
+            
+            document.getElementById('prazoFinanciamento').value = '360';
+            
+            // Resetar sliders
+            document.getElementById('sliderImovel').value = '500000';
+            document.getElementById('sliderEntrada').value = '100000';
+            document.getElementById('sliderRenda').value = '12000';
+            
+            // Desmarcar bancos
+            document.querySelectorAll('input[name="banco"]').forEach(cb => {
+                cb.checked = false;
+            });
+            document.querySelectorAll('.bank-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Resetar sistema para SAC
+            document.querySelectorAll('.system-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.system-btn[data-system="SAC"]').classList.add('active');
+            sistemaAtual = 'SAC';
+            
+            // Resetar tipo de imóvel para novo
+            document.querySelectorAll('.tipo-imovel-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.tipo-imovel-btn[data-tipo="novo"]').classList.add('active');
+            tipoImovelAtual = 'novo';
+            
+            // Ocultar resultados
+            document.getElementById('resultsSection').classList.add('hidden');
+            
+            // Limpar alertas
+            document.getElementById('alertsContainer').innerHTML = '';
+            
+            // Reset progress
+            updateProgress();
+            
+            // Scroll para o topo
+            document.querySelector('.header').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copiarResultados() {
+            const aprovados = Array.from(document.querySelectorAll('.result-card')).map(card => {
+                const banco = card.querySelector('h3').textContent.replace(/[^a-zA-Z\s]/g, '').trim();
+                const prestacao = card.querySelectorAll('.result-value')[0].textContent;
+                const percentualRenda = card.querySelectorAll('.result-value')[1].textContent;
+                return `${banco}: ${prestacao} (${percentualRenda} da renda)`;
+            });
+            
+            const resumo = `🏠 Simulação Financiamento Imobiliário\n\n${aprovados.join('\n')}\n\nSimulação realizada em ${new Date().toLocaleString('pt-BR')}`;
+            
+            navigator.clipboard.writeText(resumo).then(() => {
+                showAlert('📋 Resumo copiado para a área de transferência!', 'success');
+            }).catch(() => {
+                showAlert('❌ Erro ao copiar. Tente novamente.', 'danger');
+            });
+        }
+
+        function limparResultados() {
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('alertsContainer').innerHTML = '';
+        }
+
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Calculadora carregada e funcionando!');
             
-            // Valores iniciais com formatação simples
-            document.getElementById('valorImovel').value = '500.000,00';
-            document.getElementById('valorEntrada').value = '100.000,00';
-            document.getElementById('rendaFamiliar').value = '12.000,00';
+            // Valores iniciais
+            document.getElementById('valorImovel').value = formatarNumero('500000');
+            document.getElementById('valorEntrada').value = formatarNumero('100000');
+            document.getElementById('rendaFamiliar').value = formatarNumero('12000');
             
             // Data inicial (30 anos atrás)
             const hoje = new Date();
@@ -1008,11 +1005,7 @@
             });
 
             sliderImovel.addEventListener('input', function() {
-                const numero = parseInt(this.value);
-                valorImovel.value = numero.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
+                valorImovel.value = formatarNumero(this.value);
                 sliderEntrada.max = this.value;
                 updateProgress();
             });
